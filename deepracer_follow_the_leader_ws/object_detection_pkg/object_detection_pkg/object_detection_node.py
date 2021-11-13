@@ -35,6 +35,7 @@ import time
 import signal
 import threading
 import cv2
+import csv
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -46,7 +47,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
 from deepracer_interfaces_pkg.msg import (EvoSensorMsg,
-                                          DetectionDeltaMsg)
+                                          DetectionDeltaMsg,ObjVelocityMsg)
 from openvino.inference_engine import IECore
 import ngraph as ng
 from object_detection_pkg import (constants,
@@ -99,6 +100,17 @@ class ObjectDetectionNode(Node):
                                                      constants.DELTA_PUBLISHER_TOPIC,
                                                      qos_profile)
         self.bridge = CvBridge()
+
+
+        """CREATING A PUBLISHER FOR VELOCITY!!!"""
+
+        # Creating publishing to calculate velocity of target
+        self.velocity_publisher = \
+            self.create_publisher(ObjVelocityMsg,
+                                  constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
+                                  10)
+
+        """ ################################## """
 
         # Launching a separate thread to run inference.
         self.stop_thread = False
@@ -227,6 +239,44 @@ class ObjectDetectionNode(Node):
         delta.delta = [delta_x, delta_y]
         self.get_logger().debug(f"Delta from target position: {delta_x} {delta_y}")
         return delta
+    
+
+    """ ##################################################### """
+    ### !!! IMPLEMENTING VELOCITY ESTIMATE WITH INTERPOLATION !!!
+    """ ##################################################### """
+
+    def calculate_velocity(self, target_x, target_y, bb_center_x, bb_center_y):
+        """Method that calculates a velocity estimate of the object we are tracking
+
+        Args:
+            target_x (float): Target x co-ordinate.
+            target_y (float): Target y co-ordinate.
+            bb_center_x (float): x co-ordinate of center of detected bounding box.
+            bb_center_y (float): y co-ordinate of center of detected bounding box.
+
+        Returns:
+            delta (DetectionDeltaMsg): Normalized Error (delta) in x and y respectively
+            returned as a list of floats and converted to ObjectDetectionErrorMsg.
+        """ 
+        # Set reference time in case of first iteration
+        ref_time0 = time.perf_counter()
+        # calculate deltas and time
+        delta = self.calculate_delta(self, target_x, target_y, bb_center_x, bb_center_y)
+        ref_time = time.perf_counter()
+        with open('delta.csv', mode='w+', encoding='UTF8', newline='') as file:
+            # read first line of csv file
+            reader = csv.reader(file)
+            row1 = next(reader)
+            # write new data on first line
+            writer = csv.writer(file)
+            new_row = "{delta[0]},{delta[1]},{ref_time}"
+            writer.writerow(new_row)
+            # two cases: csv file was empty or not
+            if row1 == '':
+                return (delta[0]**2+delta[1]**2)/(ref_time-ref_time0)
+            else:
+                data = list(reader)
+                return ((delta[1]-data[1])**2+(delta[0]-data[0])**2)**0.5/(ref_time-data[3])
 
     def run_inference(self):
         """Method for running inference on received input image.

@@ -16,6 +16,7 @@
 
 DELTA_PUBLISHER_TOPIC = "object_detection_delta"
 DISPLAY_IMAGE_PUBLISHER_TOPIC = "detection_display"
+INTERPOLATION_VELOCITY_PUBLISHER_TOPIC = "velocity_display"
 
 SENSOR_FUSION_PKG_NS = "/sensor_fusion_pkg"
 SENSOR_FUSION_TOPIC = f"{SENSOR_FUSION_PKG_NS}/sensor_msg"

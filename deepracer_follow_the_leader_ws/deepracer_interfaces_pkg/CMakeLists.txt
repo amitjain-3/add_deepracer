@@ -37,7 +37,7 @@ set(msg_files
   "msg/CameraMsg.msg"
   "msg/InferResults.msg"
   "msg/InferResultsArray.msg"
-  "msg/EvoSensorMsg.msg"
+  "msg/.msg"
   "msg/ServoCtrlMsg.msg"
   "msg/NetworkConnectionStatus.msg"
   "msg/SoftwareUpdatePctMsg.msg"
