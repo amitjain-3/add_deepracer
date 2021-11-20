@@ -103,13 +103,11 @@ class ObjectDetectionNode(Node):
 
 
         """CREATING A PUBLISHER FOR VELOCITY!!!"""
-
         # Creating publishing to calculate velocity of target
         self.velocity_publisher = \
             self.create_publisher(ObjVelocityMsg,
                                   constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
                                   10)
-
         """ ################################## """
 
         # Launching a separate thread to run inference.
