@@ -43,6 +43,8 @@ set(msg_files
   "msg/SoftwareUpdatePctMsg.msg"
   "msg/USBFileSystemNotificationMsg.msg"
   "msg/DetectionDeltaMsg.msg"
+  ### ADDING CUSTOM MESSAGE FOR VELOCITY ###
+  "msg/ObjVelocityMsg.msg"
 )
 set(srv_files
   "srv/ActiveStateSrv.srv"
