@@ -247,14 +247,10 @@ class ObjectDetectionNode(Node):
         """Method that calculates a velocity estimate of the object we are tracking
 
         Args:
-            target_x (float): Target x co-ordinate.
-            target_y (float): Target y co-ordinate.
-            bb_center_x (float): x co-ordinate of center of detected bounding box.
-            bb_center_y (float): y co-ordinate of center of detected bounding box.
+            TO DO
 
         Returns:
-            delta (DetectionDeltaMsg): Normalized Error (delta) in x and y respectively
-            returned as a list of floats and converted to ObjectDetectionErrorMsg.
+            TO DO
         """ 
         # Set reference time in case of first iteration
         ref_time0 = time.perf_counter()
@@ -274,6 +270,12 @@ class ObjectDetectionNode(Node):
                 return (delta[0]**2+delta[1]**2)/(ref_time-ref_time0)
             else:
                 data = list(reader)
+                vx = (delta[1]-data[1])/(ref_time-data[3])
+                vy = (delta[0]-data[0])/(ref_time-data[3])
+                Velocity = ObjVelocityMsg()
+                Velocity.vel_x = vx
+                Velocity.vel_y = vy
+                self.get_logger().debug(f"Velocities from target position: {vx} {vy}")
                 return ((delta[1]-data[1])**2+(delta[0]-data[0])**2)**0.5/(ref_time-data[3])
 
     def run_inference(self):
