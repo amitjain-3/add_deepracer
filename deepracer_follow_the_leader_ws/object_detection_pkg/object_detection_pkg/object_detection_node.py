@@ -276,6 +276,7 @@ class ObjectDetectionNode(Node):
                 Velocity.vel_x = vx
                 Velocity.vel_y = vy
                 self.get_logger().debug(f"Velocities from target position: {vx} {vy}")
+                self.velocity_publisher.publish(Velocity)
                 return ((delta[1]-data[1])**2+(delta[0]-data[0])**2)**0.5/(ref_time-data[3])
 
     def run_inference(self):
