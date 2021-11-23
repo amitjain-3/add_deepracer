@@ -38,6 +38,7 @@ set(msg_files
   "msg/InferResults.msg"
   "msg/InferResultsArray.msg"
   "msg/ServoCtrlMsg.msg"
+  "msg/EvoSensorMsg.msg"
   "msg/NetworkConnectionStatus.msg"
   "msg/SoftwareUpdatePctMsg.msg"
   "msg/USBFileSystemNotificationMsg.msg"
