@@ -252,32 +252,30 @@ class ObjectDetectionNode(Node):
         Returns:
             TO DO
         """ 
-        # Set reference time in case of first iteration
-        ref_time0 = time.perf_counter()
-        # calculate deltas and time
         delta = self.calculate_delta(self, target_x, target_y, bb_center_x, bb_center_y)
         ref_time = time.perf_counter()
-        with open('delta.csv', mode='w+', encoding='UTF8', newline='') as file:
-            # read first line of csv file
-            reader = csv.reader(file)
-            row1 = next(reader)
-            # write new data on first line
-            writer = csv.writer(file)
-            new_row = "{delta[0]},{delta[1]},{ref_time}"
-            writer.writerow(new_row)
-            # two cases: csv file was empty or not
-            if row1 == '':
-                return (delta[0]**2+delta[1]**2)/(ref_time-ref_time0)
-            else:
-                data = list(reader)
-                vx = (delta[1]-data[1])/(ref_time-data[3])
-                vy = (delta[0]-data[0])/(ref_time-data[3])
-                Velocity = ObjVelocityMsg()
-                Velocity.vel_x = vx
-                Velocity.vel_y = vy
-                self.get_logger().debug(f"Velocities from target position: {vx} {vy}")
-                self.velocity_publisher.publish(Velocity)
-                return ((delta[1]-data[1])**2+(delta[0]-data[0])**2)**0.5/(ref_time-data[3])
+
+        try:
+            ref_time0 = time.perf_counter()
+            delta_t = ref_time - ref_time0
+            Timer.append(ref_time)
+        except:
+            delta_t = time.perf_counter()-ref_time
+            Timer = [ref_time, ref_time+delta_t]
+        
+        try:
+            Delta.append(delta)
+        except:
+            Delta = [[0,0],delta]
+        
+        vx = (Delta[-1][0]-Delta[-2][0])/delta_t
+        vy = (Delta[-1][1]-Delta[-2][1])/delta_t
+        Velocity = ObjVelocityMsg()
+        Velocity.velocity = [vx,vy]
+        self.get_logger().debug(f"Vel from target position: {vx} {vy}")
+        self.velocity_publisher.publisher.publish(Velocity)
+        return (vx**2+vy**2)**0.5/(delta_t)
+        
 
     def run_inference(self):
         """Method for running inference on received input image.
