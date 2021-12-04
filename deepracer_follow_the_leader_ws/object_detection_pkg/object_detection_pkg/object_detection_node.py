@@ -53,6 +53,9 @@ import ngraph as ng
 from object_detection_pkg import (constants,
                                   utils)
 
+""" TRYING TO INSTANTIATE LISTS """
+Delta = [[0,0]]
+Timer = [time.perf_counter()]
 
 class ObjectDetectionNode(Node):
     """Node responsible for collecting sensor data (camera images) from sensor_fusion_pkg
@@ -117,6 +120,7 @@ class ObjectDetectionNode(Node):
         self.thread.start()
         self.thread_initialized = True
         self.get_logger().info(f"Waiting for input images on {constants.SENSOR_FUSION_TOPIC}")
+
 
     def init_network(self):
         """Function which initializes Intel Inference Engine.
@@ -255,18 +259,8 @@ class ObjectDetectionNode(Node):
         delta = self.calculate_delta(self, target_x, target_y, bb_center_x, bb_center_y)
         ref_time = time.perf_counter()
 
-        try:
-            ref_time0 = time.perf_counter()
-            delta_t = ref_time - ref_time0
-            Timer.append(ref_time)
-        except:
-            delta_t = time.perf_counter()-ref_time
-            Timer = [ref_time, ref_time+delta_t]
-        
-        try:
-            Delta.append(delta)
-        except:
-            Delta = [[0,0],delta]
+        Delta.append(delta)
+        Timer.append(ref_time)
         
         vx = (Delta[-1][0]-Delta[-2][0])/delta_t
         vy = (Delta[-1][1]-Delta[-2][1])/delta_t
