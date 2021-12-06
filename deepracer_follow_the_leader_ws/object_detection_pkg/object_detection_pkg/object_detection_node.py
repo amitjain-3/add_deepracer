@@ -117,19 +117,16 @@ class ObjectDetectionNode(Node):
         self.stop_thread = False
         self.thread_initialized = False
         self.thread = threading.Thread(target=self.run_inference)
-        self.thread.start()
-        self.thread_initialized = True
-        self.get_logger().info(f"Waiting for input images on {constants.SENSOR_FUSION_TOPIC}")
-
+        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = self.thread.start()
 
         """ CREATING THREAD FOR  """
-        self.stop_thread = False
-        self.thread_initialized = False
         self.thread = threading.Thread(target=self.calculate_velocity(self.target_x,self.target_y,self.bb_center_x,self.bb_center_y))
         self.thread.start()
-        self.thread_initialized = True
-        #self.get_logger().info(f"Waiting for input images on {constants.SENSOR_FUSION_TOPIC}")
         """ ################################## """
+
+        self.thread_initialized = True
+        self.get_logger().info(f"Waiting for input images on {constants.SENSOR_FUSION_TOPIC}")
+        
 
 
     def init_network(self):
@@ -323,15 +320,15 @@ class ObjectDetectionNode(Node):
                         bottom_right_y = np.int(self.h * proposal[6])
                         # Calculate bounding box center
                         """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
-                        self.bb_center_x, self.bb_center_y = self.calculate_bb_center(top_left_x,
+                        bb_center_x, bb_center_y = self.calculate_bb_center(top_left_x,
                                                                             top_left_y,
                                                                             bottom_right_x,
                                                                             bottom_right_y)
                         # Calculate detection delta.
                         detection_delta = self.calculate_delta(self.target_x,
                                                                self.target_y,
-                                                               self.bb_center_x,
-                                                               self.bb_center_y)
+                                                               bb_center_x,
+                                                               bb_center_y)
                         # Publish to object_detection_delta topic.
                         self.delta_publisher.publish(detection_delta)
                         # Set the flag that there is a detected object.
@@ -381,6 +378,8 @@ class ObjectDetectionNode(Node):
             # Destroy the ROS Node running in another thread as well.
             self.destroy_node()
             rclpy.shutdown()
+        
+        return(bottom_right_x,bottom_right_y,bb_center_x,bb_center_y)
 
 def main(args=None):
     rclpy.init(args=args)
