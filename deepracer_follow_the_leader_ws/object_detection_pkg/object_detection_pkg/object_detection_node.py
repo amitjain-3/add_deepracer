@@ -53,10 +53,6 @@ import ngraph as ng
 from object_detection_pkg import (constants,
                                   utils)
 
-""" TRYING TO INSTANTIATE LISTS """
-Delta = [[0,0]]
-Timer = [time.perf_counter()]
-
 class ObjectDetectionNode(Node):
     """Node responsible for collecting sensor data (camera images) from sensor_fusion_pkg
        and running object detection on specified object, providing normalized delta from target for
@@ -64,6 +60,12 @@ class ObjectDetectionNode(Node):
     """
 
     def __init__(self, qos_profile):
+        
+        """ TRYING TO INSTANTIATE LISTS """
+        self.Delta = [[0,0]]
+        self.Timer = [time.perf_counter()]
+
+
         """Create a ObjectDetectionNode.
         """
         super().__init__('object_detection_node')
@@ -117,11 +119,11 @@ class ObjectDetectionNode(Node):
         self.stop_thread = False
         self.thread_initialized = False
         self.thread = threading.Thread(target=self.run_inference)
-        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = self.thread.start()
+        self.thread.start()
 
         """ CREATING THREAD FOR  """
         self.thread = threading.Thread(target=self.calculate_velocity(self.target_x,self.target_y,self.bb_center_x,self.bb_center_y))
-        self.thread.start()
+        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = self.thread.start()
         """ ################################## """
 
         self.thread_initialized = True
@@ -266,12 +268,12 @@ class ObjectDetectionNode(Node):
         delta = self.calculate_delta(self, target_x, target_y, bb_center_x, bb_center_y)
         ref_time = time.perf_counter()
 
-        Delta.append(delta)
-        Timer.append(ref_time)
+        self.Delta.append(delta)
+        self.Timer.append(ref_time)
         delta_t = Timer[-1]-Timer[-2]
         
-        vx = (Delta[-1][0]-Delta[-2][0])/delta_t
-        vy = (Delta[-1][1]-Delta[-2][1])/delta_t
+        vx = (self.Delta[-1][0]-self.Delta[-2][0])/delta_t
+        vy = (self.Delta[-1][1]-self.Delta[-2][1])/delta_t
         Velocity = ObjVelocityMsg()
         Velocity.velocity = [vx,vy]
         self.get_logger().debug(f"Vel from target position: {vx} {vy}")
