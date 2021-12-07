@@ -53,8 +53,6 @@ import ngraph as ng
 from object_detection_pkg import (constants,
                                   utils)
 
-import constants
-
 class ObjectDetectionNode(Node):
     """Node responsible for collecting sensor data (camera images) from sensor_fusion_pkg
        and running object detection on specified object, providing normalized delta from target for
@@ -270,12 +268,12 @@ class ObjectDetectionNode(Node):
         delta = self.calculate_delta(self, target_x, target_y, bb_center_x, bb_center_y)
         ref_time = time.perf_counter()
 
-        DELTA.append(delta)
-        TIMER.append(ref_time)
-        delta_t = TIMER[-1]-TIMER[-2]
+        constants.DELTA.append(delta)
+        constants.TIMER.append(ref_time)
+        delta_t = constants.TIMER[-1]-constants.TIMER[-2]
         
-        vx = (DELTA[-1][0]-DELTA[-2][0])/delta_t
-        vy = (DELTA[-1][1]-DELTA[-2][1])/delta_t
+        vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
+        vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
         Velocity = ObjVelocityMsg()
         Velocity.velocity = [vx,vy]
         self.get_logger().debug(f"Vel from target position: {vx} {vy}")
