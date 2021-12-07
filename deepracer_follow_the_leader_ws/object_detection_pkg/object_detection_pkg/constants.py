@@ -14,6 +14,9 @@
 #   limitations under the License.                                              #
 #################################################################################
 
+import time
+
+
 DELTA_PUBLISHER_TOPIC = "object_detection_delta"
 DISPLAY_IMAGE_PUBLISHER_TOPIC = "detection_display"
 INTERPOLATION_VELOCITY_PUBLISHER_TOPIC = "velocity_display"
@@ -126,3 +129,6 @@ MODEL_BIN = "/opt/models/frozen_inference_graph.bin"
 
 # Run inference on CPU instead of MYRIAD by default.
 DEVICE = "CPU"
+
+DELTA = [[0,0]]
+TIMER = [time.perf_counter()]
