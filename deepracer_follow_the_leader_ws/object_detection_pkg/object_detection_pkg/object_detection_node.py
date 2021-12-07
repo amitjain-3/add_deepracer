@@ -122,8 +122,10 @@ class ObjectDetectionNode(Node):
         self.thread.start()
 
         """ CREATING THREAD FOR  """
+        self.thread.join()
         self.thread = threading.Thread(target=self.calculate_velocity(self.target_x,self.target_y,self.bb_center_x,self.bb_center_y))
         self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = self.thread.start()
+        self.thread.join()
         """ ################################## """
 
         self.thread_initialized = True
@@ -270,7 +272,7 @@ class ObjectDetectionNode(Node):
 
         self.Delta.append(delta)
         self.Timer.append(ref_time)
-        delta_t = Timer[-1]-Timer[-2]
+        delta_t = self.Timer[-1]-self.Timer[-2]
         
         vx = (self.Delta[-1][0]-self.Delta[-2][0])/delta_t
         vy = (self.Delta[-1][1]-self.Delta[-2][1])/delta_t
@@ -284,7 +286,7 @@ class ObjectDetectionNode(Node):
     def run_inference(self):
         """Method for running inference on received input image.
         """
-
+        bottom_right_x,bottom_right_y,bb_center_x,bb_center_y = 0, 0, 0, 0
         try:
             while not self.stop_thread:
                 # Get an input image from double buffer.
