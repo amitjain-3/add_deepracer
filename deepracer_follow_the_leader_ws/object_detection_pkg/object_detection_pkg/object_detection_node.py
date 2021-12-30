@@ -120,9 +120,11 @@ class ObjectDetectionNode(Node):
         self.thread.start()
 
         """ CREATING THREAD FOR  """
+        """
         self.thread.join()
         self.thread = threading.Thread(target=self.calculate_velocity(self.target_x,self.target_y,self.bb_center_x,self.bb_center_y))
         self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = self.thread.start()
+        """
         self.thread.join()
         """ ################################## """
 

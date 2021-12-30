@@ -15,6 +15,7 @@
 #################################################################################
 
 import time
+from object_detection_pkg import object_detection_node as detect
 
 
 DELTA_PUBLISHER_TOPIC = "object_detection_delta"
@@ -132,3 +133,4 @@ DEVICE = "CPU"
 
 DELTA = [[0,0]]
 TIMER = [time.perf_counter()]
+THREADS_TARGETS = [None,None]
