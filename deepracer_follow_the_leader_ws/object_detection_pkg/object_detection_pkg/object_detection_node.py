@@ -104,33 +104,32 @@ class ObjectDetectionNode(Node):
                                                      qos_profile)
         self.bridge = CvBridge()
 
-
-        """CREATING A PUBLISHER FOR VELOCITY!!!"""
-        # Creating publishing to calculate velocity of target
-        self.velocity_publisher = \
-            self.create_publisher(ObjVelocityMsg,
-                                  constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
-                                  10)
-        """ ################################## """
-
         # Launching a separate thread to run inference.
         self.stop_thread = False
         self.thread_initialized = False
         self.thread = threading.Thread(target=self.run_inference)
         self.thread.start()
-
-        """ CREATING THREAD FOR  """
-        """
-        self.thread.join()
-        self.thread = threading.Thread(target=self.calculate_velocity(self.target_x,self.target_y,self.bb_center_x,self.bb_center_y))
-        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = self.thread.start()
-        self.thread.join()
-        """
-        """ ################################## """
-
         self.thread_initialized = True
         self.get_logger().info(f"Waiting for input images on {constants.SENSOR_FUSION_TOPIC}")
+
+
+        """ #################################### """
+        ### CREATING A PUBLISHER FOR VELOCITY!!! ###
+        """ #################################### """
+        # Creating publishing to calculate velocity of target
+        self.velocity_publisher = \
+            self.create_publisher(ObjVelocityMsg,
+                                  constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
+                                  10)
         
+        """ ################################# """
+        ### CREATING THREAD VELOCITY ESTIMATE ###
+        """ ################################# """
+        self.stop_thread_velocity = False
+        self.thread_velocity_init = False
+        self.thread_velocity = threading.Thread(target=self.calculate_velocity(self.target_x,self.target_y,self.bb_center_x,self.bb_center_y))
+        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = self.thread.start()
+        self.thread_velocity_init = True
 
 
     def init_network(self):
@@ -164,11 +163,27 @@ class ObjectDetectionNode(Node):
         if self.thread_initialized:
             self.thread.join()
             self.get_logger().info("Thread joined")
+        
+        """ #################################### """
+        ### WAITING FOR VELOCITY ESTIMATE THREAD ###
+        """ #################################### """
+        if self.thread_velocity_init:
+            self.thread_velocity.join()
+        
+
 
     def thread_shutdown(self):
         """Function which sets the flag to shutdown background thread.
         """
         self.stop_thread = True
+    
+    """ ##################################### """
+    ### SHUTTING DOWN THREAD OF VELOCITY CALC ###
+    """ ##################################### """
+    def thread_shutdown_velocity(self):
+        """Function which sets the flag to shutdown background thread.
+        """
+        self.stop_thread_velocity = True
 
     def on_image_received_cb(self, sensor_data):
         """Call back for adding to the input double buffer whenever
@@ -267,20 +282,28 @@ class ObjectDetectionNode(Node):
         Returns:
             TO DO
         """ 
-        delta = self.calculate_delta(self, target_x, target_y, bb_center_x, bb_center_y)
-        ref_time = time.perf_counter()
+        try:
+            while not self.stop_thread_velocity:
+                delta = self.calculate_delta(self, target_x, target_y, bb_center_x, bb_center_y)
+                ref_time = time.perf_counter()
 
-        constants.DELTA.append(delta)
-        constants.TIMER.append(ref_time)
-        delta_t = constants.TIMER[-1]-constants.TIMER[-2]
-        
-        vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
-        vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
-        Velocity = ObjVelocityMsg()
-        Velocity.velocity = [vx,vy]
-        self.get_logger().debug(f"Vel from target position: {vx} {vy}")
-        self.velocity_publisher.publish(Velocity)
-        return (vx**2+vy**2)**0.5/(delta_t)
+                constants.DELTA.append(delta)
+                constants.TIMER.append(ref_time)
+                delta_t = constants.TIMER[-1]-constants.TIMER[-2]
+                
+                vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
+                vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
+                Velocity = ObjVelocityMsg()
+                Velocity.velocity = [vx,vy]
+                self.get_logger().debug(f"Vel from target position: {vx} {vy}")
+                self.velocity_publisher.publish(Velocity)
+                return (vx**2+vy**2)**0.5/(delta_t)
+        except Exception as ex:
+            self.get_logger().error(f"Failed velocity calculation step: {ex}")
+            # Destroy the ROS Node running in another thread as well.
+            self.destroy_node()
+            rclpy.shutdown()
+
         
 
     def run_inference(self):
@@ -316,15 +339,16 @@ class ObjectDetectionNode(Node):
                         label = np.int(proposal[1])
                         # coordinates of the top left bounding box corner.
                         # (coordinates are in normalized format, in range [0, 1])
-                        top_left_x = np.int(self.w * proposal[3])
-                        top_left_y = np.int(self.h * proposal[4])
+                        """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
+                        self.top_left_x = np.int(self.w * proposal[3])
+                        self.top_left_y = np.int(self.h * proposal[4])
                         # coordinates of the bottom right bounding box corner.
                         # (coordinates are in normalized format, in range [0, 1])
                         bottom_right_x = np.int(self.w * proposal[5])
                         bottom_right_y = np.int(self.h * proposal[6])
                         # Calculate bounding box center
                         """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
-                        bb_center_x, bb_center_y = self.calculate_bb_center(top_left_x,
+                        self.bb_center_x, self.bb_center_y = self.calculate_bb_center(top_left_x,
                                                                             top_left_y,
                                                                             bottom_right_x,
                                                                             bottom_right_y)

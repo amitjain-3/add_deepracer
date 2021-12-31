@@ -131,6 +131,7 @@ MODEL_BIN = "/opt/models/frozen_inference_graph.bin"
 # Run inference on CPU instead of MYRIAD by default.
 DEVICE = "CPU"
 
+
 DELTA = [[0,0]]
 TIMER = [time.perf_counter()]
 THREADS_TARGETS = [None,None]
