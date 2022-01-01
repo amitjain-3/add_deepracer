@@ -408,10 +408,10 @@ class ObjectDetectionNode(Node):
         """ 
         try:
             while not self.stop_thread_velocity:
-                delta = self.calculate_delta(self, self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
+                delta = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
                 ref_time = time.perf_counter()
 
-                constants.DELTA.append(delta)
+                constants.DELTA.append(delta.delta)
                 constants.TIMER.append(ref_time)
                 delta_t = constants.TIMER[-1]-constants.TIMER[-2]
                 
