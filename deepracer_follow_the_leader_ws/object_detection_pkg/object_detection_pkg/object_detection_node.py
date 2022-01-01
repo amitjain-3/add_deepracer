@@ -414,11 +414,12 @@ class ObjectDetectionNode(Node):
                 constants.TIMER.append(ref_time)
                 delta_t = constants.TIMER[-1]-constants.TIMER[-2]
                 
-                vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
-                vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
+                # vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
+                # vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
+                vx, vy = 0,0
                 Velocity = ObjVelocityMsg()
                 Velocity.velocity = [vx,vy]
-                self.get_logger().debug(f"Vel from target position: {vx} {vy}")
+                self.get_logger().info(f"Vel from target position: {vx} {vy}")
                 self.velocity_publisher.publish(Velocity)
                 return (vx**2+vy**2)**0.5/(delta_t)
         except Exception as ex:
