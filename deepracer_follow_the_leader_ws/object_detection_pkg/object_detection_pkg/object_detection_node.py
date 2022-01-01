@@ -46,12 +46,19 @@ from rclpy.qos import (QoSProfile,
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
+### MODIFIED ###
 from deepracer_interfaces_pkg.msg import (EvoSensorMsg,
                                           DetectionDeltaMsg,ObjVelocityMsg)
+### -------- ###
+
 from openvino.inference_engine import IECore
 import ngraph as ng
 from object_detection_pkg import (constants,
                                   utils)
+
+### ADDED ###
+from std_msgs.msg import String
+### ----- ###
 
 class ObjectDetectionNode(Node):
     """Node responsible for collecting sensor data (camera images) from sensor_fusion_pkg
@@ -121,6 +128,16 @@ class ObjectDetectionNode(Node):
         self.velocity_publisher = \
             self.create_publisher(ObjVelocityMsg,
                                   constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
+                                  10)
+
+        """ #################################### """
+        ### CREATING A SUBCRIBER FOR VELOCITY!!! ###
+        """ #################################### """
+        # Creating publishing to calculate velocity of target
+        self.velocity_subscriber = \
+            self.create_subscription(ObjVelocityMsg,
+                                  constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
+                                  self.listener_callback,
                                   10)
         
         """ ################################# """
