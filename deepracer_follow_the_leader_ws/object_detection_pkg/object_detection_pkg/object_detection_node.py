@@ -137,7 +137,7 @@ class ObjectDetectionNode(Node):
         self.velocity_subscriber = \
             self.create_subscription(ObjVelocityMsg,
                                   constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
-                                  self.listener_callback,
+                                  self.velocity_listener_callback,
                                   10)
         
         """ ################################# """
@@ -201,7 +201,6 @@ class ObjectDetectionNode(Node):
         """Function which sets the flag to shutdown background thread.
         """
         self.stop_thread_velocity = True
-
     
     def on_image_received_cb(self, sensor_data):
         """Call back for adding to the input double buffer whenever
@@ -427,6 +426,12 @@ class ObjectDetectionNode(Node):
             # Destroy the ROS Node running in another thread as well.
             self.destroy_node()
             rclpy.shutdown()
+
+    """ #################################### """
+    ### CREATING A CALLBACK FUNC OF VELOCITY ###
+    """ #################################### """
+    def velocity_listener_callback(self, msg):
+        self.get_logger().info(f'I heard: "vx={msg.velocity[0]}, vy={msg.velocity[1]}"')
 
 def main(args=None):
     rclpy.init(args=args)
