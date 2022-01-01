@@ -278,8 +278,8 @@ class ObjectDetectionNode(Node):
             delta (DetectionDeltaMsg): Normalized Error (delta) in x and y respectively
             returned as a list of floats and converted to ObjectDetectionErrorMsg.
         """
-        delta_x = (bb_center_x - target_x) / self.w
-        delta_y = (bb_center_y - target_y) / self.h
+        delta_x = np.float32((bb_center_x - target_x) / self.w)
+        delta_y = np.float32((bb_center_y - target_y) / self.h)
         delta = DetectionDeltaMsg()
         delta.delta = [delta_x, delta_y]
         self.get_logger().debug(f"Delta from target position: {delta_x} {delta_y}")
