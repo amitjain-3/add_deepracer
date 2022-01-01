@@ -283,7 +283,7 @@ class ObjectDetectionNode(Node):
         delta = DetectionDeltaMsg()
         delta.delta = [delta_x, delta_y]
         self.get_logger().debug(f"Delta from target position: {delta_x} {delta_y}")
-        return delta
+        return delta, delta_x, delta_y
     
     def run_inference(self):
         """Method for running inference on received input image.
@@ -335,7 +335,7 @@ class ObjectDetectionNode(Node):
                                                                             self.bottom_right_y)
                         # Calculate detection delta.
                         """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
-                        detection_delta = self.calculate_delta(self.target_x,
+                        detection_delta, delta_x, delta_y = self.calculate_delta(self.target_x,
                                                                 self.target_y,
                                                                 self.bb_center_x,
                                                                 self.bb_center_y)
@@ -408,10 +408,9 @@ class ObjectDetectionNode(Node):
         """ 
         try:
             while not self.stop_thread_velocity:
-                delta = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
+                delta, delta_x, delta_y = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
                 ref_time = time.perf_counter()
-                self.get_logger().debug("delta = '%f" % delta.delta[-1])
-                constants.DELTA.append(delta)
+                constants.DELTA.append([delta_x,delta_y])
                 constants.TIMER.append(ref_time)
                 delta_t = constants.TIMER[-1]-constants.TIMER[-2]
                 
