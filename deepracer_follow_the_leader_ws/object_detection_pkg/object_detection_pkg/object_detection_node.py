@@ -146,7 +146,7 @@ class ObjectDetectionNode(Node):
         self.stop_thread_velocity = False
         self.thread_velocity_init = False
         self.thread_velocity = threading.Thread(target=self.calculate_velocity)
-        self.thread.start() #self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = 
+        self.thread_velocity.start() #self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = 
         self.thread_velocity_init = True
 
 
@@ -384,7 +384,7 @@ class ObjectDetectionNode(Node):
                     display_image = self.bridge.cv2_to_imgmsg(np.array(display_image), "bgr8")
                     self.display_image_publisher.publish(display_image)
                 """ MODIFIED commented to check if other thread is effectively run """
-                # self.get_logger().debug(f"Total execution time = {time.time() - start_time}")
+                # self.get_logger().info(f"Total execution time = {time.time() - start_time}")
         except Exception as ex:
             self.get_logger().error(f"Failed inference step: {ex}")
             # Destroy the ROS Node running in another thread as well.
