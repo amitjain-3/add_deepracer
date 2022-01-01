@@ -383,7 +383,8 @@ class ObjectDetectionNode(Node):
                     # Publish to display topic (Can be viewed on localhost:8080).
                     display_image = self.bridge.cv2_to_imgmsg(np.array(display_image), "bgr8")
                     self.display_image_publisher.publish(display_image)
-                self.get_logger().info(f"Total execution time = {time.time() - start_time}")
+                """ MODIFIED commented to check if other thread is effectively run """
+                # self.get_logger().debug(f"Total execution time = {time.time() - start_time}")
         except Exception as ex:
             self.get_logger().error(f"Failed inference step: {ex}")
             # Destroy the ROS Node running in another thread as well.
@@ -436,6 +437,9 @@ class ObjectDetectionNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
+    """ #################################################### """
+    ### MODIFIED RELIABILITY AND DEPTH TO PRODUCE TO OUTPUTS ###
+    """ #################################################### """
     qos = QoSProfile(reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
                      depth=1,
                      history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST)
