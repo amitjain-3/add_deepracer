@@ -116,7 +116,7 @@ class ObjectDetectionNode(Node):
         self.thread_initialized = False
         self.thread = threading.Thread(target=self.run_inference)
         ### MODIFIED self.thread.start() can only be written once and we define two threads ###
-        #self.thread.start()
+        self.thread.start()
         self.thread_initialized = True
         self.get_logger().info(f"Waiting for input images on {constants.SENSOR_FUSION_TOPIC}")
 
