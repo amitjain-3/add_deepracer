@@ -408,18 +408,20 @@ class ObjectDetectionNode(Node):
         """ 
         try:
             while not self.stop_thread_velocity:
+                self.get_logger().debug("I was there! [1]")
                 delta, delta_x, delta_y = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
                 ref_time = time.perf_counter()
+                self.get_logger().debug("I was there! [2]")
                 constants.DELTA.append([delta_x,delta_y])
                 constants.TIMER.append(ref_time)
                 delta_t = constants.TIMER[-1]-constants.TIMER[-2]
                 
                 # vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
                 # vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
-                vx, vy = 0,0
+                vx, vy = 1,1
                 Velocity = ObjVelocityMsg()
                 Velocity.velocity = [np.float32(vx),np.float32(vy)]
-                self.get_logger().info(f"Vel from target position: {vx} {vy}")
+                # self.get_logger().info(f"Vel from target position: {vx} {vy}")
                 self.velocity_publisher.publish(Velocity)
                 return (vx**2+vy**2)**0.5/(delta_t)
         except Exception as ex:
