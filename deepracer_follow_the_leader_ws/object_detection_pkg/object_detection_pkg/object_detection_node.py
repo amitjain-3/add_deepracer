@@ -128,7 +128,7 @@ class ObjectDetectionNode(Node):
         self.stop_thread_velocity = False
         self.thread_velocity_init = False
         self.thread_velocity = threading.Thread(target=self.calculate_velocity(self.target_x,self.target_y,self.bb_center_x,self.bb_center_y))
-        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = self.thread.start()
+        self.thread.start() #self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = 
         self.thread_velocity_init = True
 
 
@@ -170,13 +170,12 @@ class ObjectDetectionNode(Node):
         if self.thread_velocity_init:
             self.thread_velocity.join()
         
-
-
     def thread_shutdown(self):
         """Function which sets the flag to shutdown background thread.
         """
         self.stop_thread = True
     
+
     """ ##################################### """
     ### SHUTTING DOWN THREAD OF VELOCITY CALC ###
     """ ##################################### """
@@ -185,6 +184,7 @@ class ObjectDetectionNode(Node):
         """
         self.stop_thread_velocity = True
 
+    
     def on_image_received_cb(self, sensor_data):
         """Call back for adding to the input double buffer whenever
            new sensor image is received from sensor_fusion_node.
@@ -268,48 +268,11 @@ class ObjectDetectionNode(Node):
         self.get_logger().debug(f"Delta from target position: {delta_x} {delta_y}")
         return delta
     
-
-    """ ##################################################### """
-    ### !!! IMPLEMENTING VELOCITY ESTIMATE WITH INTERPOLATION !!!
-    """ ##################################################### """
-
-    def calculate_velocity(self, target_x, target_y, bb_center_x, bb_center_y):
-        """Method that calculates a velocity estimate of the object we are tracking
-
-        Args:
-            TO DO
-
-        Returns:
-            TO DO
-        """ 
-        try:
-            while not self.stop_thread_velocity:
-                delta = self.calculate_delta(self, target_x, target_y, bb_center_x, bb_center_y)
-                ref_time = time.perf_counter()
-
-                constants.DELTA.append(delta)
-                constants.TIMER.append(ref_time)
-                delta_t = constants.TIMER[-1]-constants.TIMER[-2]
-                
-                vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
-                vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
-                Velocity = ObjVelocityMsg()
-                Velocity.velocity = [vx,vy]
-                self.get_logger().debug(f"Vel from target position: {vx} {vy}")
-                self.velocity_publisher.publish(Velocity)
-                return (vx**2+vy**2)**0.5/(delta_t)
-        except Exception as ex:
-            self.get_logger().error(f"Failed velocity calculation step: {ex}")
-            # Destroy the ROS Node running in another thread as well.
-            self.destroy_node()
-            rclpy.shutdown()
-
-        
-
     def run_inference(self):
         """Method for running inference on received input image.
         """
-        bottom_right_x,bottom_right_y,bb_center_x,bb_center_y = 0, 0, 0, 0
+        ### MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread ###
+        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y = 0, 0, 0, 0
         try:
             while not self.stop_thread:
                 # Get an input image from double buffer.
@@ -344,19 +307,21 @@ class ObjectDetectionNode(Node):
                         self.top_left_y = np.int(self.h * proposal[4])
                         # coordinates of the bottom right bounding box corner.
                         # (coordinates are in normalized format, in range [0, 1])
-                        bottom_right_x = np.int(self.w * proposal[5])
-                        bottom_right_y = np.int(self.h * proposal[6])
+                        """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
+                        self.bottom_right_x = np.int(self.w * proposal[5])
+                        self.bottom_right_y = np.int(self.h * proposal[6])
                         # Calculate bounding box center
                         """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
-                        self.bb_center_x, self.bb_center_y = self.calculate_bb_center(top_left_x,
-                                                                            top_left_y,
-                                                                            bottom_right_x,
-                                                                            bottom_right_y)
+                        self.bb_center_x, self.bb_center_y = self.calculate_bb_center(self.top_left_x,
+                                                                            self.top_left_y,
+                                                                            self.bottom_right_x,
+                                                                            self.bottom_right_y)
                         # Calculate detection delta.
+                        """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
                         detection_delta = self.calculate_delta(self.target_x,
-                                                               self.target_y,
-                                                               bb_center_x,
-                                                               bb_center_y)
+                                                                self.target_y,
+                                                                self.bb_center_x,
+                                                                self.bb_center_y)
                         # Publish to object_detection_delta topic.
                         self.delta_publisher.publish(detection_delta)
                         # Set the flag that there is a detected object.
@@ -364,7 +329,8 @@ class ObjectDetectionNode(Node):
 
                         if imid not in boxes.keys():
                             boxes[imid] = []
-                        boxes[imid].append([top_left_x, top_left_y, bottom_right_x, bottom_right_y])
+                        """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
+                        boxes[imid].append([self.top_left_x, self.top_left_y, self.bottom_right_x, self.bottom_right_y])
                         if imid not in classes.keys():
                             classes[imid] = []
                         classes[imid].append(label)
@@ -374,9 +340,9 @@ class ObjectDetectionNode(Node):
                 if not detected:
                     # Assume being at target position.
                     detection_delta = self.calculate_delta(self.target_x,
-                                                           self.target_y,
-                                                           self.target_x,
-                                                           self.target_y)
+                                                            self.target_y,
+                                                            self.target_x,
+                                                            self.target_y)
                     self.delta_publisher.publish(detection_delta)
 
                 if self.publish_display_output:
@@ -386,17 +352,17 @@ class ObjectDetectionNode(Node):
                         for box in boxes[imid]:
                             # Drawing bounding boxes on the image.
                             cv2.rectangle(display_image,
-                                          (box[0], box[1]),
-                                          (box[2], box[3]),
-                                          (232, 35, 244),
-                                          2)
+                                            (box[0], box[1]),
+                                            (box[2], box[3]),
+                                            (232, 35, 244),
+                                            2)
                     # Printing target center on the image.
                     cv2.circle(display_image,
-                               (int(self.target_x),
+                                (int(self.target_x),
                                 int(self.target_y)),
-                               5,
-                               (0, 255, 0),
-                               -1)
+                                5,
+                                (0, 255, 0),
+                                -1)
                     # Publish to display topic (Can be viewed on localhost:8080).
                     display_image = self.bridge.cv2_to_imgmsg(np.array(display_image), "bgr8")
                     self.display_image_publisher.publish(display_image)
@@ -407,7 +373,42 @@ class ObjectDetectionNode(Node):
             self.destroy_node()
             rclpy.shutdown()
         
-        return(bottom_right_x,bottom_right_y,bb_center_x,bb_center_y)
+        """ ADDED for thread creation """
+        return(self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y)
+
+    """ ##################################################### """
+    ### !!! IMPLEMENTING VELOCITY ESTIMATE WITH INTERPOLATION !!!
+    """ ##################################################### """
+    def calculate_velocity(self):
+        """Method that calculates a velocity estimate of the object we are tracking
+
+        Args:
+            TO DO
+
+        Returns:
+            TO DO
+        """ 
+        try:
+            while not self.stop_thread_velocity:
+                delta = self.calculate_delta(self, self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
+                ref_time = time.perf_counter()
+
+                constants.DELTA.append(delta)
+                constants.TIMER.append(ref_time)
+                delta_t = constants.TIMER[-1]-constants.TIMER[-2]
+                
+                vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
+                vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
+                Velocity = ObjVelocityMsg()
+                Velocity.velocity = [vx,vy]
+                self.get_logger().debug(f"Vel from target position: {vx} {vy}")
+                self.velocity_publisher.publish(Velocity)
+                return (vx**2+vy**2)**0.5/(delta_t)
+        except Exception as ex:
+            self.get_logger().error(f"Failed velocity calculation step: {ex}")
+            # Destroy the ROS Node running in another thread as well.
+            self.destroy_node()
+            rclpy.shutdown()
 
 def main(args=None):
     rclpy.init(args=args)
