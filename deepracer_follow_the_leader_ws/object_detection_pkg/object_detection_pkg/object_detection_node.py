@@ -127,7 +127,7 @@ class ObjectDetectionNode(Node):
         """ ################################# """
         self.stop_thread_velocity = False
         self.thread_velocity_init = False
-        self.thread_velocity = threading.Thread(target=self.calculate_velocity(self.target_x,self.target_y,self.bb_center_x,self.bb_center_y))
+        self.thread_velocity = threading.Thread(target=self.calculate_velocity)
         self.thread.start() #self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = 
         self.thread_velocity_init = True
 
