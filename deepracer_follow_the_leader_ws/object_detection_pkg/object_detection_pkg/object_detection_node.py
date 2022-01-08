@@ -128,7 +128,7 @@ class ObjectDetectionNode(Node):
         self.velocity_publisher = \
             self.create_publisher(ObjVelocityMsg,
                                   constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
-                                  10)
+                                  qos_profile)
 
         """ #################################### """
         ### CREATING A SUBCRIBER FOR VELOCITY!!! ###
@@ -419,8 +419,9 @@ class ObjectDetectionNode(Node):
                 vx, vy = np.float32(1),np.float32(1)
                 Velocity = ObjVelocityMsg()
                 Velocity.velocity = [vx,vy]
-                # self.get_logger().info(f"Vel from target position: {vx} {vy}")
-                self.velocity_publisher.publish(Velocity)
+                self.get_logger().debug(f"Vel from target position: {vx} {vy}")
+                self.get_logger().debug(f"Vel from target type: {type(vx)}")
+                # self.velocity_publisher.publish(Velocity)
                 return (vx**2+vy**2)**0.5/(delta_t)
         except Exception as ex:
             self.get_logger().error(f"Failed velocity calculation step: {ex}")
