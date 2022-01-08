@@ -417,7 +417,7 @@ class ObjectDetectionNode(Node):
                 
                 # vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
                 # vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
-                vx, vy = np.float32(1),np.float32(1)
+                vx, vy = 1.0,1.0
                 Velocity = ObjVelocityMsg()
                 Velocity.velocity = [vx,vy]
                 self.get_logger().info("Vel from target position:",Velocity.velocity)
