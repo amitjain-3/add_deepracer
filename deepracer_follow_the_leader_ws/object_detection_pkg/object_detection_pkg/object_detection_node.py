@@ -434,7 +434,8 @@ class ObjectDetectionNode(Node):
     ### CREATING A CALLBACK FUNC OF VELOCITY ###
     """ #################################### """
     def velocity_listener_callback(self, msg):
-        self.get_logger().info(f'I heard: "vx={msg.velocity[0]}, vy={msg.velocity[1]}"')
+        msg = ObjVelocityMsg()
+        self.get_logger().info(f'I heard: "{msg.velocity}')
 
 def main(args=None):
     rclpy.init(args=args)
