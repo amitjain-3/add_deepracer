@@ -385,7 +385,7 @@ class ObjectDetectionNode(Node):
                     display_image = self.bridge.cv2_to_imgmsg(np.array(display_image), "bgr8")
                     self.display_image_publisher.publish(display_image)
                 """ MODIFIED commented to check if other thread is effectively run """
-                # self.get_logger().info(f"Total execution time = {time.time() - start_time}")
+                self.get_logger().info(f"Total execution time = {time.time() - start_time}")
         except Exception as ex:
             self.get_logger().error(f"Failed inference step: {ex}")
             # Destroy the ROS Node running in another thread as well.
