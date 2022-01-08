@@ -420,7 +420,7 @@ class ObjectDetectionNode(Node):
                 vx, vy = 1.0,1.0
                 Velocity = ObjVelocityMsg()
                 Velocity.velocity = [vx,vy]
-                self.get_logger().info("Vel from target position:",Velocity.velocity)
+                self.get_logger().info(f"Vel from target position: {vx},{vy}")
                 # self.get_logger().debug(f"Vel from target type: {type(vx)}")
                 # self.velocity_publisher.publish(Velocity)
                 return (vx**2+vy**2)**0.5/(delta_t)
