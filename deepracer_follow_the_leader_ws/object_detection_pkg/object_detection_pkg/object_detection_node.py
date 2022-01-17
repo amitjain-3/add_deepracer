@@ -476,8 +476,8 @@ def main(args=None):
     # when the garbage collector destroys the node object)
     
     ### MODIFIED: COMMENTED TO ERASE HANDLE ERROR ###
-    # object_detection_node.destroy_node()
-    # rclpy.shutdown()
+    object_detection_node.destroy_node()
+    rclpy.shutdown()
 
 
 if __name__ == '__main__':
