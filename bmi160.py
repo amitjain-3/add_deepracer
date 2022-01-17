@@ -82,13 +82,13 @@ z_accelOffset = 0
 
 chipid = bus.read_byte_data(BMI160_DEVICE_ADDRESS, BMI160_REGA_USR_CHIP_ID)
 
-print "---------"
+print("---------")
 if chipid == 0xD1 :
-  print "chip id is 0x%X, BMI160" % chipid
+  print("chip id is 0x%X, BMI160" % chipid)
 else :
-  print "Exit"
+  print("Exit")
   sys.exit()
-print "---------" 
+print("---------")
 
 #chip init
 bus.write_byte_data(BMI160_DEVICE_ADDRESS, BMI160_REGA_USR_ACC_CONF_ADDR, 0x28)
@@ -201,7 +201,7 @@ def read_gyro():
 
 def getAccelOffsetEnabled():
   accelStatus = reg_read_bits(BMI160_RA_OFFSET_6 , BMI160_ACC_OFFSET_EN, 1)
-  print "status %x" %( accelStatus )
+  print("status %x" %( accelStatus ))
   return;
 
 def setAccelOffsetEnabled(enabled):
@@ -270,7 +270,7 @@ def getAccelOffset():
   global y_accelOffset
   global z_accelOffset
 
-  print "Internal sensor offsets AFTER calibration..."
+  print("Internal sensor offsets AFTER calibration...")
   x_accelOffset = bus.read_byte_data(BMI160_DEVICE_ADDRESS, BMI160_RA_OFFSET_0)
   y_accelOffset = bus.read_byte_data(BMI160_DEVICE_ADDRESS, BMI160_RA_OFFSET_1)
   z_accelOffset = bus.read_byte_data(BMI160_DEVICE_ADDRESS, BMI160_RA_OFFSET_2)
@@ -284,7 +284,7 @@ def getAccelOffset():
   if(z_accelOffset > 0x7f) :
     z_accelOffset = -(0xff - z_accelOffset + 1)
 
-  print "x_accelOffset %d y_accelOffset %d z_accelOffset %d" % (x_accelOffset, y_accelOffset, z_accelOffset)
+  print("x_accelOffset %d y_accelOffset %d z_accelOffset %d" % (x_accelOffset, y_accelOffset, z_accelOffset))
   return;
 
 def autoCalibrateGyroOffset():
@@ -315,13 +315,13 @@ def getGyroOffset():
   z_offset |=  (reg_read_bits(BMI160_RA_OFFSET_6, 4, 2)) << 8 #Get OFFSET_6 bit 4 bit 5 for off_gry_z<9:8>
   z_gyroOffset = sign_extend(z_offset, 10)
 
-  print "x_gyroOffset %d y_gyroOffset %d z_gyroOffset %d" % (x_gyroOffset, y_gyroOffset, z_gyroOffset)
+  print("x_gyroOffset %d y_gyroOffset %d z_gyroOffset %d" % (x_gyroOffset, y_gyroOffset, z_gyroOffset))
 
   return;
 
 def getGyroOffsetEnabled():
   gyroStatus = reg_read_bits(BMI160_RA_OFFSET_6 , BMI160_GYR_OFFSET_EN, 1)
-  print "GyroOffsetEnabled %x" %( gyroStatus )
+  print("GyroOffsetEnabled %x" %( gyroStatus ))
   return;
 
 def setGyroOffsetEnabled(enabled):
@@ -350,7 +350,6 @@ def show_accel_gyro():
   """
   try:
     while True:
- x
      
       """
       print "==============================================================="
@@ -363,10 +362,10 @@ def show_accel_gyro():
       """
 
       print("Apply Platform Matrix")
-      print("==============================================================="
+      print("===============================================================")
       print("gyro x_raw = %d, y_raw = %d z_raw = %d" % (-gyro_x_raw, gyro_y_raw, -gyro_z_raw))
       print("gyro x = %d, y = %d z = %d" % (-gyro_x, gyro_y, -gyro_z))
-      print("==============================================================="
+      print("===============================================================")
       print("accel x_raw = %d, y_raw = %d z_raw = %d" % (-acc_x_raw, acc_y_raw, -acc_z_raw))
       print("accel x = %d, y = %d z = %d" % (-acc_x, acc_y, -acc_z))
       print("===============================================================")
