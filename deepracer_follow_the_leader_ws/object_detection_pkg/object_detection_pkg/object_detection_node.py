@@ -389,13 +389,14 @@ class ObjectDetectionNode(Node):
             
             """ ADDED for thread creation """
             return(self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y)
-            
+        """    
         except Exception as ex:
             self.get_logger().error(f"Failed inference step: {ex}")
             # Destroy the ROS Node running in another thread as well.
             self.destroy_node()
             rclpy.shutdown()
-
+        """
+        
     """ ##################################################### """
     ### !!! IMPLEMENTING VELOCITY ESTIMATE WITH INTERPOLATION !!!
     """ ##################################################### """
