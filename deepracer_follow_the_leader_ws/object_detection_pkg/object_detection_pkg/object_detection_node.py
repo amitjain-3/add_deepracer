@@ -290,7 +290,7 @@ class ObjectDetectionNode(Node):
         """Method for running inference on received input image.
         """
         ### MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread ###
-        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y = 0, 0, 0, 0
+        # self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y = 0, 0, 0, 0
         try:
             while not self.stop_thread:
                 # Get an input image from double buffer.
@@ -386,14 +386,15 @@ class ObjectDetectionNode(Node):
                     self.display_image_publisher.publish(display_image)
                 """ MODIFIED commented to check if other thread is effectively run """
                 self.get_logger().info(f"Total execution time = {time.time() - start_time}")
+            
+            """ ADDED for thread creation """
+            return(self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y)
+            
         except Exception as ex:
             self.get_logger().error(f"Failed inference step: {ex}")
             # Destroy the ROS Node running in another thread as well.
             self.destroy_node()
             rclpy.shutdown()
-        
-        """ ADDED for thread creation """
-        return(self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y)
 
     """ ##################################################### """
     ### !!! IMPLEMENTING VELOCITY ESTIMATE WITH INTERPOLATION !!!
