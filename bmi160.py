@@ -350,8 +350,7 @@ def show_accel_gyro():
   """
   try:
     while True:
-      read_gyro()
-      read_accel()
+ x
      
       """
       print "==============================================================="
@@ -363,14 +362,14 @@ def show_accel_gyro():
       print "==============================================================="
       """
 
-      print "Apply Platform Matrix"
-      print "==============================================================="
-      print "gyro x_raw = %d, y_raw = %d z_raw = %d" % (-gyro_x_raw, gyro_y_raw, -gyro_z_raw)
-      print "gyro x = %d, y = %d z = %d" % (-gyro_x, gyro_y, -gyro_z)
-      print "==============================================================="
-      print "accel x_raw = %d, y_raw = %d z_raw = %d" % (-acc_x_raw, acc_y_raw, -acc_z_raw)
-      print "accel x = %d, y = %d z = %d" % (-acc_x, acc_y, -acc_z)
-      print "==============================================================="
+      print("Apply Platform Matrix")
+      print("==============================================================="
+      print("gyro x_raw = %d, y_raw = %d z_raw = %d" % (-gyro_x_raw, gyro_y_raw, -gyro_z_raw))
+      print("gyro x = %d, y = %d z = %d" % (-gyro_x, gyro_y, -gyro_z))
+      print("==============================================================="
+      print("accel x_raw = %d, y_raw = %d z_raw = %d" % (-acc_x_raw, acc_y_raw, -acc_z_raw))
+      print("accel x = %d, y = %d z = %d" % (-acc_x, acc_y, -acc_z))
+      print("===============================================================")
       sleep(0.5)
       os.system('clear')
   except KeyboardInterrupt:
