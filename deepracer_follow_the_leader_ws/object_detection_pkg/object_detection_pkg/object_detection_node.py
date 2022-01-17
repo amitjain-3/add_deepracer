@@ -423,7 +423,7 @@ class ObjectDetectionNode(Node):
                 self.get_logger().info(f"Vel from target position: {vx},{vy}")
                 # self.get_logger().debug(f"Vel from target type: {type(vx)}")
                 self.velocity_publisher.publish(Velocity)
-                return (vx**2+vy**2)**0.5/(delta_t)
+                # return (vx**2+vy**2)**0.5/(delta_t)
         except Exception as ex:
             self.get_logger().error(f"Failed velocity calculation step: {ex}")
             # Destroy the ROS Node running in another thread as well.
