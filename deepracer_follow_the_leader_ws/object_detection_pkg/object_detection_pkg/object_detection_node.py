@@ -290,7 +290,7 @@ class ObjectDetectionNode(Node):
         """Method for running inference on received input image.
         """
         ### MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread ###
-        # self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y = 0, 0, 0, 0
+        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y = 0, 0, 0, 0
         try:
             while not self.stop_thread:
                 # Get an input image from double buffer.
