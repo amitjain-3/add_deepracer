@@ -290,7 +290,7 @@ class ObjectDetectionNode(Node):
         """Method for running inference on received input image.
         """
         ### MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread ###
-        # self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y = 0, 0, 0, 0
+        self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y = 0, 0, 0, 0
         try:
             while not self.stop_thread:
                 # Get an input image from double buffer.
@@ -423,7 +423,7 @@ class ObjectDetectionNode(Node):
                 self.get_logger().info(f"Vel from target position: {vx},{vy}")
                 # self.get_logger().debug(f"Vel from target type: {type(vx)}")
                 self.velocity_publisher.publish(Velocity)
-                return (vx**2+vy**2)**0.5/(delta_t)
+                # return (vx**2+vy**2)**0.5/(delta_t)
         except Exception as ex:
             self.get_logger().error(f"Failed velocity calculation step: {ex}")
             # Destroy the ROS Node running in another thread as well.
