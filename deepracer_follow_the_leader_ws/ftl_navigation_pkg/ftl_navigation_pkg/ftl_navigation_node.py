@@ -34,6 +34,7 @@ import time
 import signal
 import threading
 import math
+from deepracer_follow_the_leader_ws.ftl_navigation_pkg.ftl_navigation_pkg.bmi160 import accel_gyro_dev
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
@@ -45,7 +46,7 @@ from deepracer_interfaces_pkg.msg import (DetectionDeltaMsg,
                                           ServoCtrlMsg)
 from deepracer_interfaces_pkg.srv import SetMaxSpeedSrv
 from ftl_navigation_pkg import (constants,
-                                utils)
+                                utils, bmi160)
 
 
 class FTLNavigationNode(Node):
@@ -145,6 +146,13 @@ class FTLNavigationNode(Node):
         """
 
         self.delta_buffer.put(detection_delta)
+    
+    def get_imu_data(self): 
+        accel_data = []
+        gyro_data = []
+        imu_dev = bmi160.accel_gyro_dev()
+        accel_data,gyro_data = imu_dev.show_accel_gyro()
+        return accel_data,gyro_data
 
     def plan_action(self, delta):
         """Helper method to calculate action to be undertaken from the detection delta

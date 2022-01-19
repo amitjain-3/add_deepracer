@@ -3,7 +3,7 @@ import sys, getopt
 from time import sleep
 import os
 
-bus=SMBus(5)
+bus=SMBus(1)
 
 BMI160_DEVICE_ADDRESS = 0x68
 
@@ -332,22 +332,22 @@ def show_accel_gyro():
   enable_accel()
   enable_gyro()
 
-  """
-  print "Starting Acceleration calibration and enabling offset compensation..."
+  
+  print("Starting Acceleration calibration and enabling offset compensation...")
   autoCalibrateXAccelOffset(0)
   autoCalibrateYAccelOffset(0)
   autoCalibrateZAccelOffset(1)
   getAccelOffset()
-  print "Done"
+  print("Done")
   
-  print "Starting Gyroscope calibration and enabling offset compensation...";
+  print("Starting Gyroscope calibration and enabling offset compensation...")
   autoCalibrateGyroOffset()
   getGyroOffset()
-  print "Done"
+  print("Done")
   
   setGyroOffsetEnabled(1)
   setAccelOffsetEnabled(1)
-  """
+
   try:
     while True:
      
@@ -360,7 +360,8 @@ def show_accel_gyro():
       print "accel x = %d, y = %d z = %d" % (acc_x, acc_y, acc_z)
       print "==============================================================="
       """
-
+      read_gyro()
+      read_accel()
       print("Apply Platform Matrix")
       print("===============================================================")
       print("gyro x_raw = %d, y_raw = %d z_raw = %d" % (-gyro_x_raw, gyro_y_raw, -gyro_z_raw))
