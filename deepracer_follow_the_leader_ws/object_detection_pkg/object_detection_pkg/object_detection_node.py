@@ -394,14 +394,13 @@ class ObjectDetectionNode(Node):
                     self.display_image_publisher.publish(display_image)
                 """ MODIFIED commented to check if other thread is effectively run """
                 self.get_logger().info(f"Total execution time = {time.time() - start_time}")
-            
-            """ ADDED for thread creation """
-            return(self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y)   
-        except Exception as ex:
+        except BaseException as ex:
             self.get_logger().error(f"Failed inference step: {ex}")
             # Destroy the ROS Node running in another thread as well.
+            """
             self.destroy_node()
             rclpy.shutdown()
+            """
         finally:
             self.mutex_inference.release()
             self.get_logger().info(f"Inference mutex released by inference process")
