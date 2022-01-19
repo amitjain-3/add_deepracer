@@ -112,11 +112,18 @@ class ObjectDetectionNode(Node):
                                                      qos_profile)
         self.bridge = CvBridge()
 
+
+        """ ################################## """
+        ### CREATING MUTEXES TO CATCH ERRORS?! ###
+        """ ################################## """
+        self.mutex_inference = threading.Lock()
+        self.mutex_velocity = threading.Lock()
+
+
         # Launching a separate thread to run inference.
         self.stop_thread = False
         self.thread_initialized = False
         self.thread = threading.Thread(target=self.run_inference)
-        ### MODIFIED self.thread.start() can only be written once and we define two threads ###
         self.thread.start()
         self.thread_initialized = True
         self.get_logger().info(f"Waiting for input images on {constants.SENSOR_FUSION_TOPIC}")
@@ -290,6 +297,7 @@ class ObjectDetectionNode(Node):
         """Method for running inference on received input image.
         """
         ### MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread ###
+        self.mutex_inference.acquire()
         self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y = 0, 0, 0, 0
         try:
             while not self.stop_thread:
@@ -394,6 +402,9 @@ class ObjectDetectionNode(Node):
             # Destroy the ROS Node running in another thread as well.
             self.destroy_node()
             rclpy.shutdown()
+        finally:
+            self.mutex_inference.release()
+            self.get_logger().info(f"Inference mutex released by inference process")
 
     """ ##################################################### """
     ### !!! IMPLEMENTING VELOCITY ESTIMATE WITH INTERPOLATION !!!
@@ -407,6 +418,8 @@ class ObjectDetectionNode(Node):
         Returns:
             TO DO
         """ 
+        self.mutex_inference.acquire()
+        self.mutex_velocity.acquire()
         try:
             while not self.stop_thread_velocity:
                 delta, delta_x, delta_y = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
@@ -429,6 +442,11 @@ class ObjectDetectionNode(Node):
             # Destroy the ROS Node running in another thread as well.
             self.destroy_node()
             rclpy.shutdown()
+        finally:
+            self.mutex_velocity.release()
+            self.get_logger().info(f"Velocity mutex released by velocity process")
+            self.mutex_inference.release()
+            self.get_logger().info(f"Inference mutex released by velocity process")
 
     """ #################################### """
     ### CREATING A CALLBACK FUNC OF VELOCITY ###
