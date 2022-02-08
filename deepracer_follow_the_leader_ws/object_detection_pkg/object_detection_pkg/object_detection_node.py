@@ -421,15 +421,15 @@ class ObjectDetectionNode(Node):
         self.mutex_velocity.acquire()
         try:
             while not self.stop_thread_velocity:
-                delta, delta_x, delta_y = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
+                _, delta_x, delta_y = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
                 ref_time = time.perf_counter()
                 constants.DELTA.append([delta_x,delta_y])
                 constants.TIMER.append(ref_time)
                 delta_t = constants.TIMER[-1]-constants.TIMER[-2]
                 
-                vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
-                vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
-                # vx, vy = 1.0,1.0
+                vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t*100 #*100 to be removed!
+                vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t*100 #*100 to be removed!
+                
                 Velocity = ObjVelocityMsg()
                 Velocity.velocity = [vx,vy]
                 self.get_logger().info(f"Vel from target position: {vx},{vy}")
