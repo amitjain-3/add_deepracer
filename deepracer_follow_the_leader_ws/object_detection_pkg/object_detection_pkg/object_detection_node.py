@@ -113,12 +113,19 @@ class ObjectDetectionNode(Node):
         self.bridge = CvBridge()
 
 
-        """ ################################## """
-        ### CREATING MUTEXES TO CATCH ERRORS?! ###
-        """ ################################## """
+        """ ################################ """
+        ### CREATING MUTEXES TO CATCH ERRORS ###
+        """ ################################ """
         self.mutex_inference = threading.Lock()
         self.mutex_velocity = threading.Lock()
+        
 
+        """ ################################ """
+        ### VELOCITY INTERPOLATION VARIABLES ###
+        """ ################################ """
+        self.ref_time_t_1, self.ref_time_t = 0 #reference times t-1 and t
+        self.delta_x_t_1, self.delta_y_t_1 = 0, 0 #x and y relative positions calculated at t-1
+        self.delta_x_t, self.delta_y_t = 0, 0 #x and y relative positions calculated at t
 
         # Launching a separate thread to run inference.
         self.stop_thread = False
@@ -392,8 +399,8 @@ class ObjectDetectionNode(Node):
                     # Publish to display topic (Can be viewed on localhost:8080).
                     display_image = self.bridge.cv2_to_imgmsg(np.array(display_image), "bgr8")
                     self.display_image_publisher.publish(display_image)
-                """ MODIFIED commented to check if other thread is effectively run """
-                self.get_logger().info(f"Total execution time = {time.time() - start_time}")
+                """ MODIFIED commented to check if other thread effectively runs"""
+                #self.get_logger().info(f"Total execution time = {time.time() - start_time}")
         except BaseException as ex:
             self.get_logger().error(f"Failed inference step: {ex}")
             # Destroy the ROS Node running in another thread as well.
@@ -432,7 +439,7 @@ class ObjectDetectionNode(Node):
                 
                 Velocity = ObjVelocityMsg()
                 Velocity.velocity = [vx,vy]
-                self.get_logger().info(f"Vel relative position movement: {constants.DELTA[-1][0]-constants.DELTA[-2][0]},{constants.DELTA[-1][1]-constants.DELTA[-2][1]}")
+                self.get_logger().info(f"Relative positions: {delta_x},{delta_y}")
                 self.get_logger().info(f"Vel from target position: {vx},{vy}")
                 # self.get_logger().debug(f"Vel from target type: {type(vx)}")
                 self.velocity_publisher.publish(Velocity)
