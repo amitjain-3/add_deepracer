@@ -421,17 +421,18 @@ class ObjectDetectionNode(Node):
         self.mutex_velocity.acquire()
         try:
             while not self.stop_thread_velocity:
-                _, delta_x, delta_y = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
+                delta, delta_x, delta_y = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
                 ref_time = time.perf_counter()
                 constants.DELTA.append([delta_x,delta_y])
                 constants.TIMER.append(ref_time)
                 delta_t = constants.TIMER[-1]-constants.TIMER[-2]
                 
-                vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t*100 #*100 to be removed!
-                vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t*100 #*100 to be removed!
+                vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
+                vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
                 
                 Velocity = ObjVelocityMsg()
                 Velocity.velocity = [vx,vy]
+                self.get_logger().info(f"Vel relative position movement: {constants.DELTA[-1][0]-constants.DELTA[-2][0]},{constants.DELTA[-1][1]-constants.DELTA[-2][1]}")
                 self.get_logger().info(f"Vel from target position: {vx},{vy}")
                 # self.get_logger().debug(f"Vel from target type: {type(vx)}")
                 self.velocity_publisher.publish(Velocity)
