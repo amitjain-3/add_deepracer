@@ -43,10 +43,12 @@ from rclpy.qos import (QoSProfile,
                        QoSReliabilityPolicy)
 
 from deepracer_interfaces_pkg.msg import (DetectionDeltaMsg,
-                                          ServoCtrlMsg)
+                                          ServoCtrlMsg,
+                                          ObjVelocityMsg)
 from deepracer_interfaces_pkg.srv import SetMaxSpeedSrv
 from ftl_navigation_pkg import (constants,
-                                utils, bmi160)
+                                utils, bmi160, deepracer_MPC)
+from object_detection_pkg.object_detection_pkg import constants as constants_obj
 
 
 class FTLNavigationNode(Node):
@@ -95,6 +97,15 @@ class FTLNavigationNode(Node):
         self.thread.start()
         self.thread_initialized = True
         self.get_logger().info(f"Waiting for input delta: {constants.OBJECT_DETECTION_DELTA_TOPIC}")
+
+        # Create MPC controller and necessary variables
+        self.MPC = deepracer_MPC.MPC()
+        self.prev_ego_accel = [0, 0, 0]
+        self.front_velocity_subscriber = self.create_subscription(ObjVelocityMsg,
+                                                       constants_obj.INTERPOLATION_VLEOCIOTY_PUBLISHER_TOPIC,
+                                                       self.get_front_velocity,
+                                                       qos_profile)
+        self.front_velocity = None
 
     def wait_for_thread(self):
         """Function which joins the created background thread.
@@ -153,6 +164,43 @@ class FTLNavigationNode(Node):
         imu_dev = bmi160.accel_gyro_dev()
         accel_data,gyro_data = imu_dev.show_accel_gyro()
         return accel_data,gyro_data
+
+    def get_front_velocity(self, vel):
+        # vel is an array with two values [x_velocity, y_velocity] in pixels/sec
+        front_velocity_pixel = np.array(vel)
+
+        # need to convert to m/s (need focal length)
+        self.front_velocity = front_velocity_pixel
+
+    def get_MPC_action(self):
+        # Get current state (distance to front vehicle and ego vehicle speed) and front vehicle speed
+        accel_data,gyro_data = self.get_imu_data()
+        self.get_logger().info(f"Accelerometer data:{accel_data} gyro data: {gyro_data}")
+        ego_speed = (accel_data - self.prev_ego_accel)/0.1
+        detection_delta = self.delta_buffer.get()
+        deltas = np.array([detection_delta.delta[0], detection_delta.delta[1]])
+        #car_dist = np.linalg.norm(deltas) # need to map deltas to meters first
+        car_dist = 1 # placeholder
+
+        self.MPC.v_f =  1 # placeholder. do differentiation on CV deltas?
+        x_t = np.array([[car_dist],
+                        [ego_speed]])
+
+        # Step MPC with current state
+        torque = self.MPC.MPC_step(x_t)
+
+        # Convert MPC's output torque to throttle and update msg
+        ########################
+        #B: 0.00002*(x**2) + 0.0083*x + 11.461 RPM to PWM
+        #A: y = -13.333x + 20000 RPM to Torque 
+        #1. Calculate RPM from Torque from A
+        #2. Calcualte PWM from RPM using B 
+        #3. Use PWM as an input to servo node 
+        #########################
+        rpm = (torque - 20000)/(-13.3333)
+        throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
+        throttle = self.get_rescaled_manual_speed(msg.throttle , self.max_speed_pct)
+        return throttle
 
     def plan_action(self, delta):
         """Helper method to calculate action to be undertaken from the detection delta
@@ -291,24 +339,11 @@ class FTLNavigationNode(Node):
                 # Get a new message to plan action on
                 detection_delta = self.delta_buffer.get()
                 action_category = self.plan_action(detection_delta.delta)
-                accel_data,gyro_data = self.get_imu_data()
-                self.get_logger().info(f"Accelerometer data:{accel_data} gyro data: {gyro_data}")
-                ########################
-                #B: 0.00002*(x**2) + 0.0083*x + 11.461 RPM to PWM
-                #A: y = -13.333x + 20000 RPM to Torque 
-                #1. Calculate RPM from Torque from A
-                #2. Calcualte PWM from RPM using B 
-                #3. Use PWM as an input to servo node 
-
-                #########################
-
                 msg.angle, msg.throttle = self.get_mapped_action(action_category,
                                                                  self.max_speed_pct)
+                # Use MPC for throttle
+                msg.throttle = self.get_MPC_action()
 
-                torque = self.get_mpc_output(accel_data)
-                rpm = (torque - 20000)/(-13.3333)
-                msg.throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
-                msg.throttle = self.get_rescaled_manual_speed(msg.throttle , max_speed_pct)
                 # Publish msg based on action planned and mapped from a new object detection.
                 self.action_publisher.publish(msg)
                 max_speed_pct = self.max_speed_pct
