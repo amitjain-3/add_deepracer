@@ -291,8 +291,24 @@ class FTLNavigationNode(Node):
                 # Get a new message to plan action on
                 detection_delta = self.delta_buffer.get()
                 action_category = self.plan_action(detection_delta.delta)
+                accel_data,gyro_data = self.get_imu_data()
+                self.get_logger().info(f"Accelerometer data:{accel_data} gyro data: {gyro_data}")
+                ########################
+                #B: 0.00002*(x**2) + 0.0083*x + 11.461 RPM to PWM
+                #A: y = -13.333x + 20000 RPM to Torque 
+                #1. Calculate RPM from Torque from A
+                #2. Calcualte PWM from RPM using B 
+                #3. Use PWM as an input to servo node 
+
+                #########################
+
                 msg.angle, msg.throttle = self.get_mapped_action(action_category,
                                                                  self.max_speed_pct)
+
+                torque = self.get_mpc_output(accel_data)
+                rpm = (torque - 20000)/(-13.3333)
+                msg.throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
+                msg.throttle = self.get_rescaled_manual_speed(msg.throttle , max_speed_pct)
                 # Publish msg based on action planned and mapped from a new object detection.
                 self.action_publisher.publish(msg)
                 max_speed_pct = self.max_speed_pct
