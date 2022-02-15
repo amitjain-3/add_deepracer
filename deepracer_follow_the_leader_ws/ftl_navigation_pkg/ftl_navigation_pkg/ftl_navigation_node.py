@@ -191,14 +191,14 @@ class FTLNavigationNode(Node):
 
         # Convert MPC's output torque to throttle and update msg
         ########################
-        #B: 0.00002*(x**2) + 0.0083*x + 11.461 RPM to PWM
+        #B: 0.00002*(x**2) + 0.0083*x + 11.461 RPM to PWM
         #A: y = -13.333x + 20000 RPM to Torque 
         #1. Calculate RPM from Torque from A
         #2. Calcualte PWM from RPM using B 
         #3. Use PWM as an input to servo node 
         #########################
         rpm = (torque - 20000)/(-13.3333)
-        throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
+        throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
         throttle = self.get_rescaled_manual_speed(msg.throttle , self.max_speed_pct)
         return throttle
 
