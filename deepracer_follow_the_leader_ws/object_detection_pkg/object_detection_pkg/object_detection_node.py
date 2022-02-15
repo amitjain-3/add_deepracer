@@ -34,6 +34,7 @@ The node defines:
 import time
 import signal
 import threading
+from tracemalloc import start
 import cv2
 import csv
 import numpy as np
@@ -120,12 +121,10 @@ class ObjectDetectionNode(Node):
         self.mutex_velocity = threading.Lock()
         
 
-        """ ################################ """
-        ### VELOCITY INTERPOLATION VARIABLES ###
-        """ ################################ """
-        self.ref_time_t_1, self.ref_time_t = 0 #reference times t-1 and t
-        self.delta_x_t_1, self.delta_y_t_1 = 0, 0 #x and y relative positions calculated at t-1
-        self.delta_x_t, self.delta_y_t = 0, 0 #x and y relative positions calculated at t
+        """ ############################### """
+        ### BUFFER FOR PREVIOUS DELTA CALCS ###
+        """ ############################### """
+        self.delta_buffer = utils.DoubleBuffer(clear_data_on_get=True)
 
         # Launching a separate thread to run inference.
         self.stop_thread = False
@@ -295,9 +294,10 @@ class ObjectDetectionNode(Node):
         """
         delta_x = (bb_center_x - target_x) / self.w
         delta_y = (bb_center_y - target_y) / self.h
+        start_time = time.time()
         delta = DetectionDeltaMsg()
-        delta.delta = [delta_x, delta_y]
-        self.get_logger().debug(f"Delta from target position: {delta_x} {delta_y}")
+        delta.delta = [delta_x, delta_y,start_time]
+        self.get_logger().debug(f"Delta from target position: {delta_x} {delta_y} at t={start_time}")
         return delta, delta_x, delta_y
     
     def run_inference(self):
@@ -310,7 +310,6 @@ class ObjectDetectionNode(Node):
             while not self.stop_thread:
                 # Get an input image from double buffer.
                 sensor_data = self.input_buffer.get()
-                start_time = time.time()
 
                 # Pre-process input.
                 input_data = {}
@@ -351,7 +350,7 @@ class ObjectDetectionNode(Node):
                                                                             self.bottom_right_y)
                         # Calculate detection delta.
                         """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
-                        detection_delta, delta_x, delta_y = self.calculate_delta(self.target_x,
+                        detection_delta, _, _ = self.calculate_delta(self.target_x,
                                                                 self.target_y,
                                                                 self.bb_center_x,
                                                                 self.bb_center_y)
@@ -428,18 +427,15 @@ class ObjectDetectionNode(Node):
         self.mutex_velocity.acquire()
         try:
             while not self.stop_thread_velocity:
-                delta, delta_x, delta_y = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
-                ref_time = time.perf_counter()
-                constants.DELTA.append([delta_x,delta_y])
-                constants.TIMER.append(ref_time)
-                delta_t = constants.TIMER[-1]-constants.TIMER[-2]
-                
-                vx = (constants.DELTA[-1][0]-constants.DELTA[-2][0])/delta_t
-                vy = (constants.DELTA[-1][1]-constants.DELTA[-2][1])/delta_t
+                delta_t, delta_x_t, delta_y_t = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
+                delta_t_1 = self.delta_buffer.get()
+                vx = (delta_x_t-delta_t_1[0])/(delta_t[2]-delta_t_1[2])
+                vy = (delta_y_t-delta_t_1[1])/(delta_t[2]-delta_t_1[2])
+                reference_time = time.perf_counter()
                 
                 Velocity = ObjVelocityMsg()
-                Velocity.velocity = [vx,vy]
-                self.get_logger().info(f"Relative positions: {delta_x},{delta_y}")
+                Velocity.velocity = [vx,vy,reference_time]
+                self.get_logger().info(f"Relative positions: {delta_x_t},{delta_y_t}")
                 self.get_logger().info(f"Vel from target position: {vx},{vy}")
                 # self.get_logger().debug(f"Vel from target type: {type(vx)}")
                 self.velocity_publisher.publish(Velocity)
