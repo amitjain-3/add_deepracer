@@ -14,5 +14,6 @@ git fetch origin pull/111/head:ros2
 git checkout ros2
 echo ""
 echo "Cloning the rplidar_ros package"
+echo "CAREFUL! This code was saved from a left repo"
 cd ~/deepracer_ws/add_deepracer/deepracer_follow_the_leader_ws
-git clone https://github.com/youngday/rplidar_ros2.git
+git clone https://github.com/aymwc16/rplidar_ros2.git
