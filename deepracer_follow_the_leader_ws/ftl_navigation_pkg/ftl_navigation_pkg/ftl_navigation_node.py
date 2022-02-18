@@ -49,6 +49,7 @@ from ftl_navigation_pkg import (constants_ftl,
                                 utils, bmi160, deepracer_MPC)
 
 from object_detection_pkg import constants_obj
+import numpy as np
 
 class FTLNavigationNode(Node):
     """Node responsible for deciding the action messages (servo control messages specifically angle
@@ -233,7 +234,7 @@ class FTLNavigationNode(Node):
         # calculate new distance between cars and slow down "phantom" front car
         car_dist += (mpc.v_f - ego_speed)*0.1
         time_elapsed = time.time() - self.start_time
-        if time_elapsed > 1 # after 1 second, simulate slowing down "phantom" front car
+        if time_elapsed > 1: # after 1 second, simulate slowing down "phantom" front car
             self.MPC.v_f = max(0, 1 - 0.1*time_elapsed) # slow down by 0.1 m/s each second, clipped at 0 m/s
 
         # Convert MPC's output torque to throttle and update msg
