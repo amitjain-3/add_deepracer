@@ -101,7 +101,7 @@ class FTLNavigationNode(Node):
 
         # Create MPC controller and necessary variables
         self.MPC = deepracer_MPC.MPC()
-        self.prev_ego_accel = [0, 0, 0]
+        self.prev_ego_accel = 0
         self.front_velocity_subscriber = self.create_subscription(ObjVelocityMsg,
                                                        constants_obj.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
                                                        self.get_front_velocity,
@@ -191,7 +191,7 @@ class FTLNavigationNode(Node):
         # ego vehicle speed
         accel_data,gyro_data = self.get_imu_data()
         self.get_logger().info(f"Accelerometer data:{accel_data} gyro data: {gyro_data}")
-        ego_speed = (accel_data - self.prev_ego_accel)/0.1
+        ego_speed = (accel_data[0] - self.prev_ego_accel)/0.1
         self.prev_ego_accel = accel_data
 
         # construct state vector
@@ -227,7 +227,7 @@ class FTLNavigationNode(Node):
         accel_data,gyro_data = self.get_imu_data()
 
         self.get_logger().info(f"Accelerometer data:{accel_data} gyro data: {gyro_data}")
-        ego_speed = (accel_data - self.prev_ego_accel)/0.1
+        ego_speed = (accel_data[0] - self.prev_ego_accel)/0.1
         self.prev_ego_accel = accel_data
 
         # construct state vector
