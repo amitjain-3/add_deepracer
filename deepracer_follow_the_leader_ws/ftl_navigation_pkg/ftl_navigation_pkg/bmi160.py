@@ -396,8 +396,10 @@ class accel_gyro_dev():
     return;
     """
 
-show_accel_gyro()
-sys.exit()
+if __name__ == '__main__':
+  instance = accel_gyro_dev()
+  instance.show_accel_gyro()
+  sys.exit()
 
 
 
