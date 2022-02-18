@@ -19,7 +19,7 @@ class MPC():
         #   torque_low - minimum torque constraint [N*m]
         #   torque_high - maximum torque constraint [N*m]
 
-        self.m = 1.5 
+        self.m = 1.55 
         self.r = 0.034 
 
         self.A = np.array([[1, -0.1],
