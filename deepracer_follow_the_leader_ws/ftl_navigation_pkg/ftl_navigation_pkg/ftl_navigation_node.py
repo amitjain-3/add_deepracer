@@ -34,7 +34,7 @@ import time
 import signal
 import threading
 import math
-from deepracer_follow_the_leader_ws.ftl_navigation_pkg.ftl_navigation_pkg.bmi160 import accel_gyro_dev
+import bmi160
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
