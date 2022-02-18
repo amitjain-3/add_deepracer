@@ -221,6 +221,7 @@ class FTLNavigationNode(Node):
 
         # get current ego vehicle speed
         accel_data,gyro_data = self.get_imu_data()
+
         self.get_logger().info(f"Accelerometer data:{accel_data} gyro data: {gyro_data}")
         ego_speed = (accel_data - self.prev_ego_accel)/0.1
         self.prev_ego_accel = accel_data
@@ -394,10 +395,13 @@ class FTLNavigationNode(Node):
                                                                  self.max_speed_pct)
                 # Use MPC for throttle
                 # msg.throttle = self.get_MPC_action() # UNCOMMENT LATER
-
+                self.get_logger().error(f"Throttle before MPC: {msg.throttle}")
+                self.get_logger().error(f"Throttle type before MPC: {type(msg.throttle)}")
                 #----------------------Sim MPC---------------------
                 msg.throttle, sim_car_dist = self.get_sim_MPC_action(sim_car_dist)
                 #-----------------^^REMOVE AFTERWARDS^^----------------
+                self.get_logger().error(f"Throttle after MPC: {msg.throttle}")
+                self.get_logger().error(f"Throttle type after MPC: {type(msg.throttle)}")
 
                 # Publish msg based on action planned and mapped from a new object detection.
                 self.action_publisher.publish(msg)
@@ -411,6 +415,8 @@ class FTLNavigationNode(Node):
                     max_speed_pct = max_speed_pct - 0.05
                     msg.angle, msg.throttle = self.get_mapped_action(action_category,
                                                                      max_speed_pct)
+                    self.get_logger().error(f"Throttle before MPC: {msg.throttle}")
+                    self.get_logger().error(f"Throttle type before MPC: {type(msg.throttle)}")
                     # Reducing angle value
                     msg.angle = msg.angle / 2
 
@@ -420,7 +426,8 @@ class FTLNavigationNode(Node):
                     #----------------------Sim MPC---------------------
                     msg.throttle, sim_car_dist = self.get_sim_MPC_action(sim_car_dist)
                     #-----------------^^REMOVE AFTERWARDS^^----------------
-
+                    self.get_logger().error(f"Throttle after MPC: {msg.throttle}")
+                    self.get_logger().error(f"Throttle type after MPC: {type(msg.throttle)}")
                     # Publish blind action
                     self.action_publisher.publish(msg)
                     # Sleep before checking if new data is available.
