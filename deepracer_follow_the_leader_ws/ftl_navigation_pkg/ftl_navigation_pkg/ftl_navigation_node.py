@@ -50,6 +50,7 @@ from ftl_navigation_pkg import (constants_ftl,
                                 utils, bmi160, deepracer_MPC)
 
 from object_detection_pkg import constants_obj
+import numpy as np
 
 class FTLNavigationNode(Node):
     """Node responsible for deciding the action messages (servo control messages specifically angle
