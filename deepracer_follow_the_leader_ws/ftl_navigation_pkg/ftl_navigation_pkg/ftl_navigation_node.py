@@ -229,7 +229,7 @@ class FTLNavigationNode(Node):
     # Need car_dist as a parameter since it changes each time
     def get_sim_MPC_action(self, car_dist):
         # if first step of sim, set initial values 
-        if self.prev_ego_accel == [0, 0, 0]:
+        if self.prev_ego_speed == [0, 0, 0]:
             self.MPC.v_f = 1 # starting speed of "phamtom" front car in m/s
 
         # get current ego vehicle speed
