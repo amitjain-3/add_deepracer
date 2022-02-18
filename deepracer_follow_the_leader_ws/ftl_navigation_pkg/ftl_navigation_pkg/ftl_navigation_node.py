@@ -174,7 +174,7 @@ class FTLNavigationNode(Node):
         # need to convert to m/s (need focal length)
         self.front_velocity = front_velocity_pixel
 
-    def normalize_neg_1_to_1(x, x_min, x_max):
+    def normalize_neg_1_to_1(self,x, x_min, x_max):
         return 2*((x - x_min)/(x_max - x_min)) - 1
 
     def get_MPC_action(self):
