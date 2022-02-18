@@ -174,6 +174,9 @@ class FTLNavigationNode(Node):
         # need to convert to m/s (need focal length)
         self.front_velocity = front_velocity_pixel
 
+    def normalize_neg_1_to_1(x, x_min, x_max):
+        return 2*((x - x_min)/(x_max - x_min)) - 1
+
     def get_MPC_action(self):
         # Get current state (distance to front vehicle and ego vehicle speed) and front vehicle speed
         # distance to front vehicle
@@ -196,7 +199,8 @@ class FTLNavigationNode(Node):
                         [ego_speed]])
 
         # Step MPC with current state
-        torque = self.MPC.MPC_step(x_t)
+        [feas, x_opt, u_opt, J_opt] = self.MPC.MPC_step(x_t)
+        torque = u_opt.value[0][0]
 
         # Convert MPC's output torque to throttle and update msg
         ########################
@@ -231,7 +235,8 @@ class FTLNavigationNode(Node):
                         [ego_speed]])
 
         # Step MPC with current state
-        torque = self.MPC.MPC_step(x_t)
+        [feas, x_opt, u_opt, J_opt] = self.MPC.MPC_step(x_t)
+        torque = u_opt.value[0][0]
 
         # calculate new distance between cars and slow down "phantom" front car
         car_dist += (self.MPC.v_f - ego_speed)*0.1
@@ -247,8 +252,11 @@ class FTLNavigationNode(Node):
         #2. Calcualte PWM from RPM using B 
         #3. Use PWM as an input to servo node 
         #########################
-        rpm = (torque - 20000)/(-13.3333)
-        throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
+        #rpm = (torque - 20000)/(-13.3333)
+        #throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
+
+        # Normalize torque betwen -1 and 1 to pass into get_rescaled_manual_speed
+        throttle = normalize_neg_1_to_1(torque, self.MPC.torque_low, self.MPC.torque_high)
         throttle = self.get_rescaled_manual_speed(throttle , self.max_speed_pct)
 
         return throttle, car_dist
