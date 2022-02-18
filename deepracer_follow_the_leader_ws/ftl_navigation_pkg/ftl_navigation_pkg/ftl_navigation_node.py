@@ -235,8 +235,8 @@ class FTLNavigationNode(Node):
         # calculate new distance between cars and slow down "phantom" front car
         car_dist += (self.MPC.v_f - ego_speed)*0.1
         time_elapsed = time.time() - self.start_time
-        if time_elapsed > 1: # after 1 second, simulate slowing down "phantom" front car
-            self.MPC.v_f = max(0, 1 - 0.1*time_elapsed) # slow down by 0.1 m/s each second, clipped at 0 m/s
+        if time_elapsed > 2: # after 1 second, simulate slowing down "phantom" front car
+            self.MPC.v_f = max(0, 1 - 0.1*(time_elapsed - 2)) # slow down by 0.1 m/s each second, clipped at 0 m/s
 
         # Convert MPC's output torque to throttle and update msg
         ########################
