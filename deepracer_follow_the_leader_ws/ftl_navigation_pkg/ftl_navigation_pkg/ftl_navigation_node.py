@@ -34,7 +34,6 @@ import time
 import signal
 import threading
 import math
-import bmi160
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
