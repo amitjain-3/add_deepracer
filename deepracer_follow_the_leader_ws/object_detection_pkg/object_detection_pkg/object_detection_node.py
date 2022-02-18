@@ -55,7 +55,7 @@ from deepracer_interfaces_pkg.msg import (EvoSensorMsg,
 
 from openvino.inference_engine import IECore
 import ngraph as ng
-from object_detection_pkg import (constants,
+from object_detection_pkg import (constants_obj,
                                   utils)
 
 ### ADDED ###
@@ -84,7 +84,7 @@ class ObjectDetectionNode(Node):
         self.declare_parameter("DEVICE")
         self.device = self.get_parameter("DEVICE").get_parameter_value().string_value
         if not self.device:
-            self.device = constants.DEVICE
+            self.device = constants_obj.DEVICE
         # Check if the inference output needs to be published to localhost using web_video_server
         self.declare_parameter("PUBLISH_DISPLAY_OUTPUT")
         self.publish_display_output = \
@@ -97,19 +97,19 @@ class ObjectDetectionNode(Node):
 
         # Create subscription to sensor messages from camera.
         self.image_subscriber = self.create_subscription(EvoSensorMsg,
-                                                         constants.SENSOR_FUSION_TOPIC,
+                                                         constants_obj.SENSOR_FUSION_TOPIC,
                                                          self.on_image_received_cb,
                                                          qos_profile)
 
         # Creating publisher for display_image.
         self.display_image_publisher = \
             self.create_publisher(Image,
-                                  constants.DISPLAY_IMAGE_PUBLISHER_TOPIC,
+                                  constants_obj.DISPLAY_IMAGE_PUBLISHER_TOPIC,
                                   10)
 
         # Creating publisher for error (delta) from target bb position.
         self.delta_publisher = self.create_publisher(DetectionDeltaMsg,
-                                                     constants.DELTA_PUBLISHER_TOPIC,
+                                                     constants_obj.DELTA_PUBLISHER_TOPIC,
                                                      qos_profile)
         self.bridge = CvBridge()
 
@@ -132,7 +132,7 @@ class ObjectDetectionNode(Node):
         self.thread = threading.Thread(target=self.run_inference)
         self.thread.start()
         self.thread_initialized = True
-        self.get_logger().info(f"Waiting for input images on {constants.SENSOR_FUSION_TOPIC}")
+        self.get_logger().info(f"Waiting for input images on {constants_obj.SENSOR_FUSION_TOPIC}")
 
 
         """ #################################### """
@@ -141,7 +141,7 @@ class ObjectDetectionNode(Node):
         # Creating publishing to calculate velocity of target
         self.velocity_publisher = \
             self.create_publisher(ObjVelocityMsg,
-                                  constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
+                                  constants_obj.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
                                   qos_profile)
 
         """ #################################### """
@@ -150,7 +150,7 @@ class ObjectDetectionNode(Node):
         # Creating publishing to calculate velocity of target
         self.velocity_subscriber = \
             self.create_subscription(ObjVelocityMsg,
-                                  constants.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
+                                  constants_obj.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
                                   self.velocity_listener_callback,
                                   10)
         
@@ -172,7 +172,7 @@ class ObjectDetectionNode(Node):
         self.ie = IECore()
 
         # Read and load the network.
-        self.net = self.ie.read_network(model=constants.MODEL_XML, weights=constants.MODEL_BIN)
+        self.net = self.ie.read_network(model=constants_obj.MODEL_XML, weights=constants_obj.MODEL_BIN)
         self.func = ng.function_from_cnn(self.net)
         self.ops = self.func.get_ordered_ops()
         self.exec_net = self.ie.load_network(network=self.net, device_name=self.device)
@@ -326,8 +326,8 @@ class ObjectDetectionNode(Node):
                 for number, proposal in enumerate(output_data):
                     # confidence for the predicted class.
                     confidence = proposal[2]
-                    if (confidence > constants.CONFIDENCE_THRESHOLD and
-                            constants.COCO_LABELS[proposal[1]] == constants.DETECT_CLASS):
+                    if (confidence > constants_obj.CONFIDENCE_THRESHOLD and
+                            constants_obj.COCO_LABELS[proposal[1]] == constants_obj.DETECT_CLASS):
                         # ID of the image in the batch.
                         imid = np.int(proposal[0])
                         # predicted class ID.
