@@ -101,7 +101,7 @@ class FTLNavigationNode(Node):
         self.MPC = deepracer_MPC.MPC()
         self.prev_ego_accel = [0, 0, 0]
         self.front_velocity_subscriber = self.create_subscription(ObjVelocityMsg,
-                                                       constants_obj.INTERPOLATION_VLEOCIOTY_PUBLISHER_TOPIC,
+                                                       constants_obj.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
                                                        self.get_front_velocity,
                                                        qos_profile)
         self.front_velocity = None
