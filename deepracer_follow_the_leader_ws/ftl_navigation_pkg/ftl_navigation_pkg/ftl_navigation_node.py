@@ -205,7 +205,7 @@ class FTLNavigationNode(Node):
         #########################
         rpm = (torque - 20000)/(-13.3333)
         throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
-        throttle = self.get_rescaled_manual_speed(msg.throttle , self.max_speed_pct)
+        throttle = self.get_rescaled_manual_speed(throttle , self.max_speed_pct)
 
         return throttle
 
@@ -244,7 +244,7 @@ class FTLNavigationNode(Node):
         #########################
         rpm = (torque - 20000)/(-13.3333)
         throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
-        throttle = self.get_rescaled_manual_speed(msg.throttle , self.max_speed_pct)
+        throttle = self.get_rescaled_manual_speed(throttle , self.max_speed_pct)
 
         return throttle, car_dist
 
