@@ -34,6 +34,7 @@ import time
 import signal
 import threading
 import math
+import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
@@ -176,7 +177,7 @@ class FTLNavigationNode(Node):
         # Get current state (distance to front vehicle and ego vehicle speed) and front vehicle speed
         # distance to front vehicle
         detection_delta = self.delta_buffer.get()
-        deltas = np.array([detection_delta.delta[0], detection_delta.delta[1]])
+        # deltas = [detection_delta.delta[0], detection_delta.delta[1]]
         #car_dist = np.linalg.norm(deltas) # need to map deltas to meters first
         car_dist = 1 # placeholder
 
@@ -207,7 +208,6 @@ class FTLNavigationNode(Node):
         rpm = (torque - 20000)/(-13.3333)
         throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
         throttle = self.get_rescaled_manual_speed(throttle , self.max_speed_pct)
-
         return throttle
 
     # Simulate "phantom" front vehicle braking for a demo. 
@@ -390,9 +390,10 @@ class FTLNavigationNode(Node):
                 action_category = self.plan_action(detection_delta.delta)
                 msg.angle, msg.throttle = self.get_mapped_action(action_category,
                                                                  self.max_speed_pct)
-                # Use MPC for throttle
-                # msg.throttle = self.get_MPC_action() # UNCOMMENT LATER
 
+                self.get_logger().info(f"I reached step 1")
+
+                # Use MPC for throttle
                 #----------------------Sim MPC---------------------
                 msg.throttle, sim_car_dist = self.get_sim_MPC_action(sim_car_dist)
                 #-----------------^^REMOVE AFTERWARDS^^----------------
@@ -400,15 +401,18 @@ class FTLNavigationNode(Node):
                 # Publish msg based on action planned and mapped from a new object detection.
                 self.action_publisher.publish(msg)
                 max_speed_pct = self.max_speed_pct
+                self.get_logger().info(f"I reached step 2")
 
                 # Sleep for a default amount of time before checking if new data is available.
                 time.sleep(constants_ftl.DEFAULT_SLEEP)
+                self.get_logger().info(f"I reached step 3")
                 # If new data is not available within default time, gracefully run blind.
                 while self.delta_buffer.is_empty() and not self.stop_thread:
                     # Decrease the max_speed_pct in every iteration so as to halt gradually.
                     max_speed_pct = max_speed_pct - 0.05
                     msg.angle, msg.throttle = self.get_mapped_action(action_category,
                                                                      max_speed_pct)
+                    self.get_logger().info(f"I reached step 5")
                     # Reducing angle value
                     msg.angle = msg.angle / 2
 
