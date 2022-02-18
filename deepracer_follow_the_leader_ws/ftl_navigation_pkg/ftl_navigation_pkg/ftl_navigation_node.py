@@ -187,6 +187,7 @@ class FTLNavigationNode(Node):
         accel_data,gyro_data = self.get_imu_data()
         self.get_logger().info(f"Accelerometer data:{accel_data} gyro data: {gyro_data}")
         ego_speed = (accel_data - self.prev_ego_accel)/0.1
+        self.prev_ego_accel = accel_data
 
         # construct state vector
         x_t = np.array([[car_dist],
@@ -216,10 +217,11 @@ class FTLNavigationNode(Node):
         if self.prev_ego_accel == [0, 0, 0]:
             self.MPC.v_f = 1
 
-        # ego vehicle speed
+        # get current ego vehicle speed
         accel_data,gyro_data = self.get_imu_data()
         self.get_logger().info(f"Accelerometer data:{accel_data} gyro data: {gyro_data}")
         ego_speed = (accel_data - self.prev_ego_accel)/0.1
+        self.prev_ego_accel = accel_data
 
         # construct state vector
         x_t = np.array([[car_dist],
