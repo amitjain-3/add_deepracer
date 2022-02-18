@@ -234,9 +234,11 @@ class FTLNavigationNode(Node):
         x_t = np.array([[car_dist],
                         [ego_speed]])
 
+        self.get_logger().info(f"Before MPC step:{ego_speed}")
         # Step MPC with current state
         [feas, x_opt, u_opt, J_opt] = self.MPC.MPC_step(x_t)
         torque = u_opt.value[0][0]
+        self.get_logger().info(f"Before MPC step:{ego_speed}")
 
         # calculate new distance between cars and slow down "phantom" front car
         car_dist += (self.MPC.v_f - ego_speed)*0.1
