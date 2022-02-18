@@ -34,6 +34,7 @@ import time
 import signal
 import threading
 import math
+import sys
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
@@ -45,10 +46,10 @@ from deepracer_interfaces_pkg.msg import (DetectionDeltaMsg,
                                           ServoCtrlMsg,
                                           ObjVelocityMsg)
 from deepracer_interfaces_pkg.srv import SetMaxSpeedSrv
-from ftl_navigation_pkg import (constants,
+from ftl_navigation_pkg import (constants_ftl,
                                 utils, bmi160, deepracer_MPC)
-from object_detection_pkg.object_detection_pkg import constants as constants_obj
-
+                                
+from object_detection_pkg import constants_obj
 
 class FTLNavigationNode(Node):
     """Node responsible for deciding the action messages (servo control messages specifically angle
