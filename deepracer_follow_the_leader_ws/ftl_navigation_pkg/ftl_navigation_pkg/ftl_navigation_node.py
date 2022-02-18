@@ -34,7 +34,6 @@ import time
 import signal
 import threading
 import math
-import sys
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
@@ -48,7 +47,7 @@ from deepracer_interfaces_pkg.msg import (DetectionDeltaMsg,
 from deepracer_interfaces_pkg.srv import SetMaxSpeedSrv
 from ftl_navigation_pkg import (constants_ftl,
                                 utils, bmi160, deepracer_MPC)
-                                
+
 from object_detection_pkg import constants_obj
 
 class FTLNavigationNode(Node):
@@ -68,7 +67,7 @@ class FTLNavigationNode(Node):
         # Create subscription to detection deltas from object_detection_node.
         self.detection_delta_subscriber = \
             self.create_subscription(DetectionDeltaMsg,
-                                     constants.OBJECT_DETECTION_DELTA_TOPIC,
+                                     constants_ftl.OBJECT_DETECTION_DELTA_TOPIC,
                                      self.detection_delta_cb,
                                      qos_profile)
 
