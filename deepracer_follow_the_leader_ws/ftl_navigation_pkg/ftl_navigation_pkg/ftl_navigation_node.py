@@ -435,6 +435,7 @@ class FTLNavigationNode(Node):
                 self.get_logger().error(f"Throttle type before MPC: {type(msg.throttle)}")
                 #----------------------Sim MPC---------------------
                 msg.throttle, sim_car_dist = self.get_sim_MPC_action(sim_car_dist)
+                msg.throttle = 1 #COMMENT LATER
                 #-----------------^^REMOVE AFTERWARDS^^----------------
                 self.get_logger().error(f"Throttle after MPC: {msg.throttle}")
                 self.get_logger().error(f"Throttle type after MPC: {type(msg.throttle)}")
