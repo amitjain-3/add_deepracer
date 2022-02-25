@@ -66,13 +66,15 @@ class FTLNavigationNode(Node):
         # Double buffer to hold the input deltas in x and y from Object Detection.
         self.delta_buffer = utils.DoubleBuffer(clear_data_on_get=True)
 
+        """
         # Create subscription to detection deltas from object_detection_node.
         self.detection_delta_subscriber = \
             self.create_subscription(DetectionDeltaMsg,
                                      constants_ftl.OBJECT_DETECTION_DELTA_TOPIC,
                                      self.detection_delta_cb,
                                      qos_profile)
-
+        """
+        
         # Creating publisher to publish action (angle and throttle).
         self.action_publisher = self.create_publisher(ServoCtrlMsg,
                                                       constants_ftl.ACTION_PUBLISH_TOPIC,
