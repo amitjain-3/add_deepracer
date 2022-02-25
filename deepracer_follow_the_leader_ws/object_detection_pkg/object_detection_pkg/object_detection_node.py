@@ -49,8 +49,7 @@ from sensor_msgs.msg import Image
 
 ### MODIFIED ###
 from deepracer_interfaces_pkg.msg import (EvoSensorMsg,
-                                          DetectionDeltaMsg,
-                                          ObjVelocityMsg)
+                                          DetectionDeltaMsg)
 ### -------- ###
 
 from openvino.inference_engine import IECore
@@ -114,18 +113,6 @@ class ObjectDetectionNode(Node):
         self.bridge = CvBridge()
 
 
-        """ ################################ """
-        ### CREATING MUTEXES TO CATCH ERRORS ###
-        """ ################################ """
-        self.mutex_inference = threading.Lock()
-        self.mutex_velocity = threading.Lock()
-        
-
-        """ ############################### """
-        ### BUFFER FOR PREVIOUS DELTA CALCS ###
-        """ ############################### """
-        self.delta_buffer = utils.DoubleBuffer(clear_data_on_get=True)
-
         # Launching a separate thread to run inference.
         self.stop_thread = False
         self.thread_initialized = False
@@ -133,35 +120,6 @@ class ObjectDetectionNode(Node):
         self.thread.start()
         self.thread_initialized = True
         self.get_logger().info(f"Waiting for input images on {constants_obj.SENSOR_FUSION_TOPIC}")
-
-
-        """ #################################### """
-        ### CREATING A PUBLISHER FOR VELOCITY!!! ###
-        """ #################################### """
-        # Creating publishing to calculate velocity of target
-        self.velocity_publisher = \
-            self.create_publisher(ObjVelocityMsg,
-                                  constants_obj.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
-                                  qos_profile)
-
-        """ #################################### """
-        ### CREATING A SUBCRIBER FOR VELOCITY!!! ###
-        """ #################################### """
-        # Creating publishing to calculate velocity of target
-        self.velocity_subscriber = \
-            self.create_subscription(ObjVelocityMsg,
-                                  constants_obj.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
-                                  self.velocity_listener_callback,
-                                  10)
-        
-        """ ################################# """
-        ### CREATING THREAD VELOCITY ESTIMATE ###
-        """ ################################# """
-        self.stop_thread_velocity = False
-        self.thread_velocity_init = False
-        self.thread_velocity = threading.Thread(target=self.calculate_velocity)
-        self.thread_velocity.start() #self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y  = 
-        self.thread_velocity_init = True
 
 
     def init_network(self):
@@ -207,14 +165,6 @@ class ObjectDetectionNode(Node):
         """
         self.stop_thread = True
     
-
-    """ ##################################### """
-    ### SHUTTING DOWN THREAD OF VELOCITY CALC ###
-    """ ##################################### """
-    def thread_shutdown_velocity(self):
-        """Function which sets the flag to shutdown background thread.
-        """
-        self.stop_thread_velocity = True
     
     def on_image_received_cb(self, sensor_data):
         """Call back for adding to the input double buffer whenever
@@ -304,7 +254,6 @@ class ObjectDetectionNode(Node):
         """Method for running inference on received input image.
         """
         ### MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread ###
-        self.mutex_inference.acquire()
         self.bottom_right_x,self.bottom_right_y,self.bb_center_x,self.bb_center_y = 0, 0, 0, 0
         try:
             while not self.stop_thread:
@@ -407,62 +356,12 @@ class ObjectDetectionNode(Node):
             self.destroy_node()
             rclpy.shutdown()
             """
-        finally:
-            self.mutex_inference.release()
-            self.get_logger().info(f"Inference mutex released by inference process")
-
-    """ ##################################################### """
-    ### !!! IMPLEMENTING VELOCITY ESTIMATE WITH INTERPOLATION !!!
-    """ ##################################################### """
-    def calculate_velocity(self):
-        """Method that calculates a velocity estimate of the object we are tracking
-
-        Args:
-            TO DO
-
-        Returns:
-            TO DO
-        """ 
-        self.mutex_inference.acquire()
-        self.mutex_velocity.acquire()
-        try:
-            while not self.stop_thread_velocity:
-                delta_t, delta_x_t, delta_y_t = self.calculate_delta(self.target_x, self.target_y, self.bb_center_x, self.bb_center_y)
-                delta_t_1 = self.delta_buffer.get()
-                vx = (delta_x_t-delta_t_1[0])/(delta_t[2]-delta_t_1[2])
-                vy = (delta_y_t-delta_t_1[1])/(delta_t[2]-delta_t_1[2])
-                reference_time = time.perf_counter()
-                
-                Velocity = ObjVelocityMsg()
-                Velocity.velocity = [vx,vy,reference_time]
-                self.get_logger().info(f"Relative positions: {delta_x_t},{delta_y_t}")
-                self.get_logger().info(f"Vel from target position: {vx},{vy}")
-                # self.get_logger().debug(f"Vel from target type: {type(vx)}")
-                self.velocity_publisher.publish(Velocity)
-                # return (vx**2+vy**2)**0.5/(delta_t)
-        except Exception as ex:
-            self.get_logger().error(f"Failed velocity calculation step: {ex}")
-            # Destroy the ROS Node running in another thread as well.
-            self.destroy_node()
-            rclpy.shutdown()
-        finally:
-            self.mutex_velocity.release()
-            self.get_logger().info(f"Velocity mutex released by velocity process")
-            self.mutex_inference.release()
-            self.get_logger().info(f"Inference mutex released by velocity process")
-
-    """ #################################### """
-    ### CREATING A CALLBACK FUNC OF VELOCITY ###
-    """ #################################### """
-    def velocity_listener_callback(self, msg):
-        msg = ObjVelocityMsg()
-        self.get_logger().info(f'I heard: "{msg.velocity}')
 
 def main(args=None):
     rclpy.init(args=args)
-    """ #################################################### """
-    ### MODIFIED RELIABILITY AND DEPTH TO PRODUCE TO OUTPUTS ###
-    """ #################################################### """
+    """ ################################################# """
+    ### MODIFIED RELIABILITY AND DEPTH TO PRODUCE OUTPUTS ###
+    """ ################################################# """
     qos = QoSProfile(reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
                      depth=1,
                      history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST)
