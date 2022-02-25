@@ -43,8 +43,7 @@ from rclpy.qos import (QoSProfile,
                        QoSReliabilityPolicy)
 
 from deepracer_interfaces_pkg.msg import (DetectionDeltaMsg,
-                                          ServoCtrlMsg,
-                                          ObjVelocityMsg)
+                                          ServoCtrlMsg)
 from deepracer_interfaces_pkg.srv import SetMaxSpeedSrv
 from ftl_navigation_pkg import (constants_ftl,
                                 utils, bmi160, deepracer_MPC)
@@ -66,14 +65,14 @@ class FTLNavigationNode(Node):
         # Double buffer to hold the input deltas in x and y from Object Detection.
         self.delta_buffer = utils.DoubleBuffer(clear_data_on_get=True)
 
-        """
+        
         # Create subscription to detection deltas from object_detection_node.
         self.detection_delta_subscriber = \
             self.create_subscription(DetectionDeltaMsg,
                                      constants_ftl.OBJECT_DETECTION_DELTA_TOPIC,
                                      self.detection_delta_cb,
                                      qos_profile)
-        """
+        
         
         # Creating publisher to publish action (angle and throttle).
         self.action_publisher = self.create_publisher(ServoCtrlMsg,
@@ -104,10 +103,6 @@ class FTLNavigationNode(Node):
         # Create MPC controller and necessary variables
         self.MPC = deepracer_MPC.MPC()
         self.prev_ego_speed = 0
-        self.front_velocity_subscriber = self.create_subscription(ObjVelocityMsg,
-                                                       constants_obj.INTERPOLATION_VELOCITY_PUBLISHER_TOPIC,
-                                                       self.get_front_velocity,
-                                                       qos_profile)
         self.front_velocity = None
         self.start_time = time.time()
         self.prev_torque = 0
@@ -181,6 +176,9 @@ class FTLNavigationNode(Node):
     def normalize_neg_1_to_1(self,x, x_min, x_max):
         return 2*((x - x_min)/(x_max - x_min)) - 1
 
+    def velocity_interpolation(self,delta):
+        delta_x, delta_y, time = delta[0], delta[1], delta[2]
+    
     def get_MPC_action(self):
         # Get current state (distance to front vehicle and ego vehicle speed) and front vehicle speed
         # distance to front vehicle
