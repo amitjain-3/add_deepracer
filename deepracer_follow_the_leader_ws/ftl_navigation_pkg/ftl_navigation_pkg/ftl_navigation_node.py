@@ -108,6 +108,7 @@ class FTLNavigationNode(Node):
                                                        qos_profile)
         self.front_velocity = None
         self.start_time = time.time()
+        self.prev_torque = 0
 
     def wait_for_thread(self):
         """Function which joins the created background thread.
@@ -168,6 +169,7 @@ class FTLNavigationNode(Node):
         return accel_data,gyro_data
 
     def get_front_velocity(self, vel):
+        # get front velocity from INTERPOLATION_VELOCITY_PUBLISHER_TOPIC
         # vel is an array with two values [x_velocity, y_velocity] in pixels/sec
         front_velocity_pixel = np.array(vel)
 
@@ -200,7 +202,13 @@ class FTLNavigationNode(Node):
 
         # Step MPC with current state
         [feas, x_opt, u_opt, J_opt] = self.MPC.MPC_step(x_t)
-        torque = u_opt.value[0][0]
+        if feas != "infeasible":
+            # if MPC finds a solution, use its torque output
+            torque = u_opt.value[0][0]
+        else:
+            # if MPC can't find solution, use reduced previous torque 
+            torque = self.prev_torque*0.9
+        self.prev_torque = torque
 
         # Convert MPC's output torque to throttle and update msg
         ########################
@@ -210,13 +218,16 @@ class FTLNavigationNode(Node):
         #2. Calcualte PWM from RPM using B 
         #3. Use PWM as an input to servo node 
         #########################
-        rpm = (torque - 20000)/(-13.3333)
-        throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
+        #rpm = (torque - 20000)/(-13.3333)
+        #throttle = 0.00002*(rpm**2) + 0.0083*(rpm) + 11.461
+
+        # Normalize torque betwen -1 and 1 to pass into get_rescaled_manual_speed
+        throttle = self.normalize_neg_1_to_1(torque, self.MPC.torque_low, self.MPC.torque_high)
         throttle = self.get_rescaled_manual_speed(throttle , self.max_speed_pct)
 
         return throttle
 
-    # Estimates the distance of front car
+    # Estimates the distance to the front car
     # Use of simple optic geometry
     def get_front_distance(self, delta):
         delta_x, delta_y = delta[0], delta[1]
@@ -246,7 +257,13 @@ class FTLNavigationNode(Node):
         self.get_logger().info(f"Before MPC step:{ego_speed}")
         # Step MPC with current state
         [feas, x_opt, u_opt, J_opt] = self.MPC.MPC_step(x_t)
-        torque = u_opt.value[0][0]
+        if feas != "infeasible":
+            # if MPC finds a solution, use its torque output
+            torque = u_opt.value[0][0]
+        else:
+            # if MPC can't find solution, use reduced previous torque 
+            torque = self.prev_torque*0.9
+        self.prev_torque = torque
         self.get_logger().info(f"After MPC step:{ego_speed}")
 
         # calculate new distance between cars and slow down "phantom" front car
