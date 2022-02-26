@@ -272,6 +272,7 @@ class ObjectDetectionNode(Node):
                 boxes, classes = {}, {}
                 output_data = res[0][0]
                 detected = False
+                self.get_logger().info(f"Went to line 275")
                 for number, proposal in enumerate(output_data):
                     # confidence for the predicted class.
                     confidence = proposal[2]
@@ -286,11 +287,13 @@ class ObjectDetectionNode(Node):
                         """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
                         self.top_left_x = np.int(self.w * proposal[3])
                         self.top_left_y = np.int(self.h * proposal[4])
+                        self.get_logger().info(f"Went to line 290")
                         # coordinates of the bottom right bounding box corner.
                         # (coordinates are in normalized format, in range [0, 1])
                         """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
                         self.bottom_right_x = np.int(self.w * proposal[5])
                         self.bottom_right_y = np.int(self.h * proposal[6])
+                        self.get_logger().info(f"Went to line 296")
                         # Calculate bounding box center
                         """ MODIFIED bb_... INTO self.bb_... so __init__ can access them and create a thread """
                         self.bb_center_x, self.bb_center_y = self.calculate_bb_center(self.top_left_x,
@@ -304,9 +307,11 @@ class ObjectDetectionNode(Node):
                                                                 self.bb_center_x,
                                                                 self.bb_center_y)
                         # Publish to object_detection_delta topic.
+                        self.get_logger().info(f"Went to line 310")
                         self.delta_publisher.publish(detection_delta)
                         # Set the flag that there is a detected object.
                         detected = True
+                        self.get_logger().info(f"Went to line 314")
 
                         if imid not in boxes.keys():
                             boxes[imid] = []
@@ -316,6 +321,7 @@ class ObjectDetectionNode(Node):
                             classes[imid] = []
                         classes[imid].append(label)
                         # Break as soon as specified class is detected.
+                        self.get_logger().info(f"Went to line 324")
                         break
 
                 if not detected:
