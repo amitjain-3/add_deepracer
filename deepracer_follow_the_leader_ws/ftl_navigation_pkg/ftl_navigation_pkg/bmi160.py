@@ -3,7 +3,10 @@ import sys, getopt
 from time import sleep
 import os
 
-bus=SMBus(2)
+try:
+  bus=SMBus(2)
+except:
+  bus=SMBus(1)
 
 BMI160_DEVICE_ADDRESS = 0x68
 
