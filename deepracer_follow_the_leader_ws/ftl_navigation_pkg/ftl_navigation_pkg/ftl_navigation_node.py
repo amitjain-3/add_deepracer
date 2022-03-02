@@ -48,7 +48,12 @@ from deepracer_interfaces_pkg.srv import SetMaxSpeedSrv
 from ftl_navigation_pkg import (constants_ftl,
                                 utils, bmi160, deepracer_MPC)
 
-from object_detection_pkg import constants_obj
+import sys
+sys.path.insert(0,'./../../object_detection_pkg/object_detection_pkg/')
+
+from object_detection_pkg import (constants_obj)
+
+
 import numpy as np
 
 class FTLNavigationNode(Node):
